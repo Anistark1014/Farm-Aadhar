@@ -1,0 +1,428 @@
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useLanguage } from '@/hooks/useLanguage';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { SensorCard } from '@/components/dashboard/SensorCard';
+import { SensorChart } from '@/components/dashboard/SensorChart';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PastRecordsTable } from '@/components/dashboard/PastRecordsTable';
+import { getStatusWithThresholds } from '@/components/settings/ThresholdSettings';
+import { thresholdService } from '@/api/threshold-service';
+import {
+  Thermometer,
+  Droplets,
+  TreePine,
+  Wind,
+  TrendingUp,
+  AlertTriangle,
+  FlaskConical,
+  CloudDrizzle
+} from 'lucide-react';
+import { toast } from 'sonner';
+import TrendAnalysis from '@/components/dashboard/TrendAnalysis';
+
+interface SensorReading {
+  id: string;
+  timestamp: string;
+  air_temperature?: number;
+  air_humidity?: number;
+  air_air_quality_mq135?: number;
+  air_alcohol_mq3?: number;
+  air_smoke_mq2?: number;
+  // fallback for old fields
+  temperature?: number;
+  humidity?: number;
+  air_quality_mq135?: number;
+  alcohol_mq3?: number;
+  smoke_mq2?: number;
+}
+
+const Index = () => {
+  const { t } = useLanguage();
+  const { user, loading: authLoading } = useAuth();
+  const [latestData, setLatestData] = useState<SensorReading | null>(null);
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedGraph, setSelectedGraph] = useState('temperature');
+  const [currentThresholds, setCurrentThresholds] = useState<any>({});
+
+  // Load current thresholds
+  useEffect(() => {
+    const loadThresholds = async () => {
+      try {
+        const thresholds = await thresholdService.getCurrentThresholds();
+        setCurrentThresholds(thresholds);
+      } catch (error) {
+        console.error('Error loading thresholds:', error);
+      }
+    };
+    
+    loadThresholds();
+  }, []);
+
+  const fetchSensorData = useCallback(async () => {
+    try {
+      // Fetch latest reading
+      const { data: latest, error: latestError } = await supabase
+        .from('sensor_readings')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(1);
+
+      if (latest && latest.length > 0) {
+        setLatestData(latest[0]);
+      }
+
+      // Fetch last 20 readings for chart
+      const { data: readings, error: readingsError } = await supabase
+        .from('sensor_readings')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(20);
+
+      if (readings && readings.length > 0) {
+        const chartData = readings.reverse().map(reading => ({
+          time: new Date(reading.timestamp).toLocaleTimeString(),
+          temperature: reading.temperature ?? 0,
+          humidity: reading.humidity ?? 0,
+          airTemperature: ((reading as any).air_temperature ?? reading.temperature) ?? 0,
+          airHumidity: ((reading as any).air_humidity ?? reading.humidity) ?? 0,
+          airQuality: ((reading as any).air_air_quality_mq135 ?? reading.air_quality_mq135) ?? 0,
+          alcohol: ((reading as any).air_alcohol_mq3 ?? reading.alcohol_mq3) ?? 0,
+          smoke: ((reading as any).air_smoke_mq2 ?? reading.smoke_mq2) ?? 0
+        }));
+        setChartData(chartData);
+      } else {
+        setChartData([]);
+      }
+      
+      if (latestError) {
+        console.error('Error fetching latest data:', latestError);
+      }
+      if (readingsError) {
+        console.error('Error fetching readings:', readingsError);
+      }
+    } catch (error) {
+      console.error('Error fetching sensor data:', error);
+      toast.error('Failed to fetch sensor data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Optimized real-time data update callback
+  const updateChartData = useCallback((newReading: SensorReading) => {
+    setChartData(prev => {
+      const newDataPoint = {
+        time: new Date(newReading.timestamp).toLocaleTimeString(),
+        temperature: newReading.temperature ?? 0,
+        humidity: newReading.humidity ?? 0,
+        airTemperature: newReading.air_temperature ?? newReading.temperature ?? 0,
+        airHumidity: newReading.air_humidity ?? newReading.humidity ?? 0,
+        airQuality: newReading.air_air_quality_mq135 ?? newReading.air_quality_mq135 ?? 0,
+        alcohol: newReading.air_alcohol_mq3 ?? newReading.alcohol_mq3 ?? 0,
+        smoke: newReading.air_smoke_mq2 ?? newReading.smoke_mq2 ?? 0
+      };
+      
+      // Only update if this is actually new data (avoid duplicate updates)
+      const lastTime = prev[prev.length - 1]?.time;
+      if (lastTime === newDataPoint.time) {
+        return prev; // No change if same timestamp
+      }
+      
+      const newData = [...prev, newDataPoint];
+      return newData.slice(-20); // Keep only last 20 points
+    });
+  }, []);
+
+  useEffect(() => {
+    // Don't fetch data if authentication is still loading or user is not authenticated
+    if (authLoading || !user) {
+      return;
+    }
+
+    let mounted = true;
+    
+    const setupRealtimeAndFetch = async () => {
+      // Fetch initial data
+      await fetchSensorData();
+      
+      if (!mounted) return;
+      
+      // Set up real-time subscription with unique channel name
+      const channel = supabase
+        .channel('index-kpi-updates', {
+          config: {
+            presence: {
+              key: `user-${Date.now()}`
+            }
+          }
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'sensor_readings'
+          },
+          (payload) => {
+            if (!mounted) return;
+            console.log('Real-time update received in Index:', payload);
+            const newReading = payload.new as SensorReading;
+            setLatestData(newReading);
+            updateChartData(newReading);
+            toast.success('New sensor data received!');
+          }
+        )
+        .subscribe();
+        
+      return () => {
+        mounted = false;
+        console.log('Cleaning up Index subscription');
+        if (channel) {
+          supabase.removeChannel(channel);
+        }
+      };
+    };
+    
+    const cleanup = setupRealtimeAndFetch();
+    
+    return () => {
+      mounted = false;
+      cleanup.then(cleanupFn => cleanupFn && cleanupFn());
+    };
+  }, [user, authLoading, fetchSensorData, updateChartData]);
+
+  // Optimistic reload effect for KPI cards - refresh every 5 seconds (reduced frequency)
+  useEffect(() => {
+    if (authLoading || !user) {
+      return;
+    }
+
+    const kpiRefreshInterval = setInterval(async () => {
+      try {
+        // Fetch only the latest reading for KPI cards optimization
+        const { data: latest, error } = await supabase
+          .from('sensor_readings')
+          .select('*')
+          .order('timestamp', { ascending: false })
+          .limit(1);
+
+        if (latest && latest.length > 0 && !error) {
+          // Only update if the timestamp is different (avoid unnecessary updates)
+          setLatestData(prev => {
+            if (prev && prev.timestamp === latest[0].timestamp) {
+              return prev; // No change
+            }
+            console.log('KPI cards optimistically updated');
+            return latest[0];
+          });
+        }
+      } catch (error) {
+        console.error('Error in optimistic KPI refresh:', error);
+      }
+    }, 5000); // Refresh every 5 seconds (reduced from 2 seconds)
+
+    return () => {
+      clearInterval(kpiRefreshInterval);
+    };
+  }, [user, authLoading]);
+
+  const getStatus = useCallback((value: number, type: 'air_temperature' | 'air_humidity' | 'air_quality_mq135' | 'alcohol_mq3' | 'smoke_mq2' | 'temperature' | 'humidity' | 'air' | 'alcohol' | 'smoke' | 'airquality') => {
+    // Map legacy types to new threshold types
+    const thresholdTypeMap = {
+      'temperature': 'air_temperature',
+      'humidity': 'air_humidity', 
+      'air': 'air_quality_mq135',
+      'alcohol': 'alcohol_mq3',
+      'smoke': 'smoke_mq2',
+      'airquality': 'air_quality_mq135'
+    } as const;
+
+    const mappedType = thresholdTypeMap[type as keyof typeof thresholdTypeMap] || type;
+    
+    // Use database thresholds if available
+    if (currentThresholds[mappedType]) {
+      const threshold = currentThresholds[mappedType];
+      if (value < threshold.low || value > threshold.high) {
+        return 'critical';
+      }
+      // Warning zone (within 10% of thresholds)
+      const range = threshold.high - threshold.low;
+      const warningMargin = range * 0.1;
+      if (value <= threshold.low + warningMargin || value >= threshold.high - warningMargin) {
+        return 'warning';
+      }
+      return 'healthy';
+    } else {
+      // Fallback to legacy threshold function
+      return getStatusWithThresholds(value, mappedType as any);
+    }
+  }, [currentThresholds]);
+
+  // Memoize chart props to prevent unnecessary re-renders
+  if (authLoading || loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-20 bg-muted rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Responsive KPI Cards */}
+      <div className="
+  grid grid-cols-2 gap-4 mb-4 justify-center items-stretch 
+  md:flex md:flex-wrap
+">
+        <div className="flex flex-col gap-4 w-full sm:w-1/2 lg:w-1/4 min-w-[220px]">
+          <SensorCard
+            title="Air Temp"
+            value={((latestData as any)?.air_temperature ?? latestData?.temperature ?? 0).toFixed(1)}
+            unit="°C"
+            icon={<Thermometer className="h-5 w-5" />}
+            status={getStatus((latestData as any)?.air_temperature ?? latestData?.temperature ?? 0, 'temperature')}
+            sensorType="temperature"
+            currentThresholds={currentThresholds}
+            trend={{ value: 4, type: 'up' }}
+          />
+        </div>
+        <div className="flex flex-col gap-4 w-full sm:w-1/2 lg:w-1/4 min-w-[220px]">
+          <SensorCard
+            title="Air Humidity"
+            value={((latestData as any)?.air_humidity ?? latestData?.humidity ?? 0).toFixed(1)}
+            unit="%"
+            icon={<CloudDrizzle className="h-5 w-5" />}
+            status={getStatus((latestData as any)?.air_humidity ?? latestData?.humidity ?? 0, 'humidity')}
+            sensorType="humidity"
+            currentThresholds={currentThresholds}
+            trend={{ value: 3, type: 'down' }}
+          />
+        </div>
+        <div className="flex flex-col gap-4 w-full sm:w-1/2 lg:w-1/4 min-w-[220px]">
+          <SensorCard
+            title="Smoke"
+            value={((latestData as any)?.air_smoke_mq2 ?? latestData?.smoke_mq2 ?? 0)}
+            unit="ppm"
+            icon={<AlertTriangle className="h-5 w-5" />}
+            status={getStatus((latestData as any)?.air_smoke_mq2 ?? latestData?.smoke_mq2 ?? 0, 'smoke_mq2')}
+            sensorType="smoke_mq2"
+            currentThresholds={currentThresholds}
+            trend={{ value: 1, type: 'up' }}
+          />
+        </div>
+        <div className="flex flex-col gap-4 w-full sm:w-1/2 lg:w-1/4 min-w-[220px]">
+          <SensorCard
+            title="Alcohol"
+            value={((latestData as any)?.air_alcohol_mq3 ?? latestData?.alcohol_mq3 ?? 0)}
+            unit="ppm"
+            icon={<FlaskConical className="h-5 w-5" />}
+            status={getStatus((latestData as any)?.air_alcohol_mq3 ?? latestData?.alcohol_mq3 ?? 0, 'alcohol_mq3')}
+            sensorType="alcohol_mq3"
+            currentThresholds={currentThresholds}
+            trend={{ value: 2, type: 'down' }}
+          />
+        </div>
+        <div className="flex flex-col gap-4 w-full sm:w-1/2 lg:w-1/4 min-w-[220px]">
+          <SensorCard
+            title="Air Quality"
+            value={((latestData as any)?.air_air_quality_mq135 ?? latestData?.air_quality_mq135 ?? 0)}
+            unit="ppm"
+            icon={<Wind className="h-5 w-5" />}
+            status={getStatus((latestData as any)?.air_air_quality_mq135 ?? latestData?.air_quality_mq135 ?? 0, 'air_quality_mq135')}
+            sensorType="air_quality_mq135"
+            currentThresholds={currentThresholds}
+            trend={{ value: 3, type: 'down' }}
+          />
+        </div>
+      </div>
+      {/* Trend Analysis Widget */}
+        <TrendAnalysis farmData={chartData.slice(-10)} />
+
+      {/* Individual Sensor Graph Tabs */}
+      <div className="my-8">
+        <div className="flex border-b border-border mb-6 overflow-x-auto">
+          {[
+            { key: 'temperature', label: 'Temperature', icon: '🌡️' },
+            { key: 'humidity', label: 'Humidity', icon: '💧' },
+            { key: 'airquality', label: 'Air Quality', icon: '🌬️' },
+            { key: 'alcohol', label: 'Alcohol', icon: '🧪' },
+            { key: 'smoke', label: 'Smoke', icon: '🔥' }
+          ].map(tab => (
+            <button
+              key={tab.key}
+              className={`px-4 py-2 font-medium focus:outline-none transition-colors duration-150 flex items-center gap-2 whitespace-nowrap
+                ${selectedGraph === tab.key
+                  ? 'border-b-2 border-primary text-primary bg-card'
+                  : 'text-muted-foreground hover:text-primary'}
+              `}
+              style={{
+                backgroundColor: selectedGraph === tab.key ? 'hsl(var(--card))' : 'transparent',
+                borderColor: selectedGraph === tab.key ? 'hsl(var(--primary))' : 'transparent',
+                color: selectedGraph === tab.key ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'
+              }}
+              onClick={() => setSelectedGraph(tab.key)}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {selectedGraph === 'temperature' && (
+          <SensorChart 
+            data={chartData}
+            title="Temperature Sensor Data"
+            lines={["airTemperature"]}
+            colorScheme="mixed"
+          />
+        )}
+        {selectedGraph === 'humidity' && (
+          <SensorChart 
+            data={chartData}
+            title="Humidity Sensor Data"
+            lines={["airHumidity"]}
+            colorScheme="mixed"
+          />
+        )}
+        {selectedGraph === 'airquality' && (
+          <SensorChart 
+            data={chartData}
+            title="Air Quality Sensor Data"
+            lines={["airQuality"]}
+            colorScheme="mixed"
+          />
+        )}
+        {selectedGraph === 'alcohol' && (
+          <SensorChart 
+            data={chartData}
+            title="Alcohol Sensor Data"
+            lines={["alcohol"]}
+            colorScheme="mixed"
+          />
+        )}
+        {selectedGraph === 'smoke' && (
+          <SensorChart 
+            data={chartData}
+            title="Smoke Sensor Data"
+            lines={["smoke"]}
+            colorScheme="mixed"
+          />
+        )}
+      </div>
+      {/* Past Records Table */}
+      <PastRecordsTable />
+    </div>
+  );
+}
+
+export default Index;
