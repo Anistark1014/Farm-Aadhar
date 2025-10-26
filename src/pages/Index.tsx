@@ -278,72 +278,59 @@ const Index = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Responsive KPI Cards */}
-      <div className="
-  grid grid-cols-2 gap-4 mb-4 justify-center items-stretch 
-  md:flex md:flex-wrap
-">
-        <div className="flex flex-col gap-4 w-full sm:w-1/2 lg:w-1/4 min-w-[220px]">
-          <SensorCard
-            title="Air Temp"
-            value={((latestData as any)?.air_temperature ?? latestData?.temperature ?? 0).toFixed(1)}
-            unit="°C"
-            icon={<Thermometer className="h-5 w-5" />}
-            status={getStatus((latestData as any)?.air_temperature ?? latestData?.temperature ?? 0, 'temperature')}
-            sensorType="temperature"
-            currentThresholds={currentThresholds}
-            trend={{ value: 4, type: 'up' }}
-          />
-        </div>
-        <div className="flex flex-col gap-4 w-full sm:w-1/2 lg:w-1/4 min-w-[220px]">
-          <SensorCard
-            title="Air Humidity"
-            value={((latestData as any)?.air_humidity ?? latestData?.humidity ?? 0).toFixed(1)}
-            unit="%"
-            icon={<CloudDrizzle className="h-5 w-5" />}
-            status={getStatus((latestData as any)?.air_humidity ?? latestData?.humidity ?? 0, 'humidity')}
-            sensorType="humidity"
-            currentThresholds={currentThresholds}
-            trend={{ value: 3, type: 'down' }}
-          />
-        </div>
-        <div className="flex flex-col gap-4 w-full sm:w-1/2 lg:w-1/4 min-w-[220px]">
-          <SensorCard
-            title="Smoke"
-            value={((latestData as any)?.air_smoke_mq2 ?? latestData?.smoke_mq2 ?? 0)}
-            unit="ppm"
-            icon={<AlertTriangle className="h-5 w-5" />}
-            status={getStatus((latestData as any)?.air_smoke_mq2 ?? latestData?.smoke_mq2 ?? 0, 'smoke_mq2')}
-            sensorType="smoke_mq2"
-            currentThresholds={currentThresholds}
-            trend={{ value: 1, type: 'up' }}
-          />
-        </div>
-        <div className="flex flex-col gap-4 w-full sm:w-1/2 lg:w-1/4 min-w-[220px]">
-          <SensorCard
-            title="Alcohol"
-            value={((latestData as any)?.air_alcohol_mq3 ?? latestData?.alcohol_mq3 ?? 0)}
-            unit="ppm"
-            icon={<FlaskConical className="h-5 w-5" />}
-            status={getStatus((latestData as any)?.air_alcohol_mq3 ?? latestData?.alcohol_mq3 ?? 0, 'alcohol_mq3')}
-            sensorType="alcohol_mq3"
-            currentThresholds={currentThresholds}
-            trend={{ value: 2, type: 'down' }}
-          />
-        </div>
-        <div className="flex flex-col gap-4 w-full sm:w-1/2 lg:w-1/4 min-w-[220px]">
-          <SensorCard
-            title="Air Quality"
-            value={((latestData as any)?.air_air_quality_mq135 ?? latestData?.air_quality_mq135 ?? 0)}
-            unit="ppm"
-            icon={<Wind className="h-5 w-5" />}
-            status={getStatus((latestData as any)?.air_air_quality_mq135 ?? latestData?.air_quality_mq135 ?? 0, 'air_quality_mq135')}
-            sensorType="air_quality_mq135"
-            currentThresholds={currentThresholds}
-            trend={{ value: 3, type: 'down' }}
-          />
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+        <SensorCard
+          title="Air Temp"
+          value={((latestData as any)?.air_temperature ?? latestData?.temperature ?? 0).toFixed(1)}
+          unit="°C"
+          icon={<Thermometer className="h-4 w-4 md:h-5 md:w-5" />}
+          status={getStatus((latestData as any)?.air_temperature ?? latestData?.temperature ?? 0, 'temperature')}
+          sensorType="temperature"
+          currentThresholds={currentThresholds}
+          trend={{ value: 4, type: 'up' }}
+        />
+        <SensorCard
+          title="Air Humidity"
+          value={((latestData as any)?.air_humidity ?? latestData?.humidity ?? 0).toFixed(1)}
+          unit="%"
+          icon={<CloudDrizzle className="h-4 w-4 md:h-5 md:w-5" />}
+          status={getStatus((latestData as any)?.air_humidity ?? latestData?.humidity ?? 0, 'humidity')}
+          sensorType="humidity"
+          currentThresholds={currentThresholds}
+          trend={{ value: 3, type: 'down' }}
+        />
+        <SensorCard
+          title="Smoke"
+          value={((latestData as any)?.air_smoke_mq2 ?? latestData?.smoke_mq2 ?? 0)}
+          unit="ppm"
+          icon={<AlertTriangle className="h-4 w-4 md:h-5 md:w-5" />}
+          status={getStatus((latestData as any)?.air_smoke_mq2 ?? latestData?.smoke_mq2 ?? 0, 'smoke_mq2')}
+          sensorType="smoke_mq2"
+          currentThresholds={currentThresholds}
+          trend={{ value: 1, type: 'up' }}
+        />
+        <SensorCard
+          title="Alcohol"
+          value={((latestData as any)?.air_alcohol_mq3 ?? latestData?.alcohol_mq3 ?? 0)}
+          unit="ppm"
+          icon={<FlaskConical className="h-4 w-4 md:h-5 md:w-5" />}
+          status={getStatus((latestData as any)?.air_alcohol_mq3 ?? latestData?.alcohol_mq3 ?? 0, 'alcohol_mq3')}
+          sensorType="alcohol_mq3"
+          currentThresholds={currentThresholds}
+          trend={{ value: 2, type: 'down' }}
+        />
+        <SensorCard
+          title="Air Quality"
+          value={((latestData as any)?.air_air_quality_mq135 ?? latestData?.air_quality_mq135 ?? 0)}
+          unit="ppm"
+          icon={<Wind className="h-4 w-4 md:h-5 md:w-5" />}
+          status={getStatus((latestData as any)?.air_air_quality_mq135 ?? latestData?.air_quality_mq135 ?? 0, 'air_quality_mq135')}
+          sensorType="air_quality_mq135"
+          currentThresholds={currentThresholds}
+          trend={{ value: 3, type: 'down' }}
+        />
       </div>
       {/* Trend Analysis Widget */}
         <TrendAnalysis farmData={chartData.slice(-10)} />
@@ -360,7 +347,7 @@ const Index = () => {
           ].map(tab => (
             <button
               key={tab.key}
-              className={`px-4 py-2 font-medium focus:outline-none transition-colors duration-150 flex items-center gap-2 whitespace-nowrap
+              className={`px-2 md:px-4 py-2 font-medium focus:outline-none transition-colors duration-150 flex items-center gap-1 md:gap-2 whitespace-nowrap text-xs md:text-sm
                 ${selectedGraph === tab.key
                   ? 'border-b-2 border-primary text-primary bg-card'
                   : 'text-muted-foreground hover:text-primary'}
@@ -372,8 +359,8 @@ const Index = () => {
               }}
               onClick={() => setSelectedGraph(tab.key)}
             >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
+              <span className="text-sm md:text-base">{tab.icon}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
         </div>

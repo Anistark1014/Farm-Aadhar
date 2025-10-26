@@ -148,10 +148,10 @@ export function SensorCard({
 
   return (
     <TooltipProvider>
-      <Card className={cn("sensor-card-glow hover-scale cursor-pointer", className)}>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+      <Card className={cn("sensor-card-glow hover-scale cursor-pointer border-0 shadow-md", className)}>
+        <CardContent className="p-3 md:p-6">
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 text-primary">
               {icon}
             </div>
             <Badge className={cn("px-2 py-1 text-xs font-medium", statusInfo.badge)}>
@@ -159,11 +159,11 @@ export function SensorCard({
             </Badge>
           </div>
           
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-foreground">{value}</span>
-              <span className="text-sm text-muted-foreground">{unit}</span>
+          <div className="space-y-1 md:space-y-2">
+            <h3 className="text-xs md:text-sm font-medium text-muted-foreground">{title}</h3>
+            <div className="flex items-baseline gap-1 md:gap-2">
+              <span className="text-xl md:text-3xl font-bold text-foreground">{value}</span>
+              <span className="text-xs md:text-sm text-muted-foreground">{unit}</span>
             </div>
             
             {/* Show threshold status with detailed tooltip */}

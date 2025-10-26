@@ -6,7 +6,8 @@ import {
   Settings,
   Sprout,
   Home,
-  Newspaper
+  Newspaper,
+  Zap
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -31,6 +32,12 @@ const menuItems = [
     url: '/', 
     icon: Home,
     description: 'Real-time sensor data and overview'
+  },
+  { 
+    title: 'Automation', 
+    url: '/automation', 
+    icon: Zap,
+    description: 'Control AC, fans, and water pumps'
   },
   { 
     title: 'news', 

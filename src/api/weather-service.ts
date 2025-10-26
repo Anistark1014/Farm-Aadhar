@@ -272,19 +272,28 @@ export async function getWeatherByCity(city: string): Promise<WeatherData> {
 export function getUserLocation(): Promise<{ lat: number; lon: number }> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
+      console.warn('Geolocation not supported, will use fallback location');
       reject(new Error('Geolocation not supported'));
       return;
     }
 
+    // Add timeout and better error handling
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log('✅ Location obtained successfully');
         resolve({
           lat: position.coords.latitude,
           lon: position.coords.longitude,
         });
       },
       (error) => {
+        console.warn('⚠️ Geolocation failed:', error.message, '- using fallback location');
         reject(error);
+      },
+      {
+        timeout: 10000, // 10 second timeout
+        enableHighAccuracy: false, // Use less accurate but faster location
+        maximumAge: 300000 // Accept cached location up to 5 minutes old
       }
     );
   });

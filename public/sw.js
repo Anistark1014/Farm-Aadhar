@@ -78,6 +78,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip external images that may have CORS issues
+  if (url.origin !== location.origin && request.destination === 'image') {
+    // Let the browser handle external images directly, don't cache them
+    return;
+  }
+
   // Cache-first strategy for static assets
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
@@ -98,6 +104,10 @@ self.addEventListener('fetch', (event) => {
         });
 
         return response;
+      }).catch((error) => {
+        console.log('[Service Worker] Fetch failed for:', request.url, error);
+        // Return a fallback or just let it fail silently
+        return new Response('', { status: 404, statusText: 'Not found' });
       });
     })
   );

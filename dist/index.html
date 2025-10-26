@@ -42,8 +42,8 @@
     <meta name="twitter:title" content="Farm Aadhar - Smart Polyhouse Monitoring" />
     <meta name="twitter:description" content="Real-time sensor monitoring, automation controls, and farming insights for modern agriculture." />
     <meta name="twitter:image" content="/placeholder.svg" />
-    <script type="module" crossorigin src="/assets/index-DyHh8ISD.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-ifmhmGqD.css">
+    <script type="module" crossorigin src="/assets/index-ixPyBPzO.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-9I7pZIk2.css">
   </head>
 
   <body>
@@ -53,13 +53,25 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
+          // Only register service worker in production or if explicitly enabled
+          const isProduction = location.protocol === 'https:' || location.hostname === 'localhost';
+          if (isProduction) {
+            navigator.serviceWorker.register('/sw.js', {
+              scope: '/',
+              updateViaCache: 'none' // Prevent aggressive caching during development
+            })
             .then((registration) => {
               console.log('Service Worker registered successfully:', registration.scope);
+              
+              // Prevent automatic updates that could cause page refreshes
+              registration.addEventListener('updatefound', () => {
+                console.log('Service Worker update found, but not forcing refresh');
+              });
             })
             .catch((error) => {
               console.log('Service Worker registration failed:', error);
             });
+          }
         });
       }
     </script>

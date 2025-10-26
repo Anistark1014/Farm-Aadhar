@@ -8,6 +8,7 @@ import { Newspaper, Search, TrendingUp, Sprout, Bug, Cloud, DollarSign, Lightbul
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/useLanguage';
 import ReactMarkdown from 'react-markdown';
+import { FallbackImage } from '@/components/ui/fallback-image';
 import { 
   fetchNews, 
   likeArticle, 
@@ -252,13 +253,12 @@ export default function News() {
         </Button>
 
         <Card>
-          {selectedArticle.featured_image_url && (
-            <img
-              src={selectedArticle.featured_image_url}
-              alt={selectedArticle.title}
-              className="w-full h-64 object-cover rounded-t-lg"
-            />
-          )}
+          <FallbackImage
+            src={selectedArticle.featured_image_url}
+            alt={selectedArticle.title}
+            className="w-full h-64 object-cover rounded-t-lg"
+            fallbackIcon={<Newspaper className="w-16 h-16 text-muted-foreground/40" />}
+          />
           
           <CardHeader>
             <div className="flex items-center gap-2 mb-2">
@@ -467,13 +467,12 @@ export default function News() {
                     className="cursor-pointer hover:shadow-lg transition-shadow"
                     onClick={() => handleArticleClick(article)}
                   >
-                    {(article.thumbnail_url || article.featured_image_url) && (
-                      <img
-                        src={article.thumbnail_url || article.featured_image_url || ''}
-                        alt={article.title}
-                        className="w-full h-48 object-cover rounded-t-lg"
-                      />
-                    )}
+                    <FallbackImage
+                      src={article.thumbnail_url || article.featured_image_url}
+                      alt={article.title}
+                      className="w-full h-48 object-cover rounded-t-lg"
+                      fallbackIcon={<Icon className="w-8 h-8 text-muted-foreground/40" />}
+                    />
                     
                     <CardHeader>
                       <div className="flex items-center gap-2 mb-2">

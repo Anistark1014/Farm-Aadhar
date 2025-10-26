@@ -16,6 +16,7 @@ import News from "./pages/News";
 import Tasks from "./pages/Tasks";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Automation from "./pages/Automation";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,7 @@ const App = () => (
                   </ProtectedRoute>
                 }>
                   <Route index element={<Index />} />
+                  <Route path="automation" element={<Automation />} />
                   <Route path="news" element={<News />} />
                   <Route path="tasks" element={<Tasks />} />
                   <Route path="reports" element={<Reports />} />
