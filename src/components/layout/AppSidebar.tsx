@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { 
   BarChart3, 
-  Brain, 
   CheckSquare, 
   FileBarChart, 
   Settings,
   Sprout,
-  Home
+  Home,
+  Newspaper
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -33,10 +33,10 @@ const menuItems = [
     description: 'Real-time sensor data and overview'
   },
   { 
-    title: 'aiAnalysis', 
-    url: '/ai', 
-    icon: Brain,
-    description: 'AI-powered plant analysis'
+    title: 'news', 
+    url: '/news', 
+    icon: Newspaper,
+    description: 'Farming news, tips and suggestions'
   },
   { 
     title: 'tasks', 

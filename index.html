@@ -2,26 +2,65 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
+    <!-- Primary Meta Tags -->
     <title>Farm Aadhar - Smart Polyhouse Monitoring</title>
-    <meta name="description" content="Advanced polyhouse monitoring system with real-time sensor data, AI-powered analysis, and automated suggestions for farmers" />
+    <meta name="title" content="Farm Aadhar - Smart Polyhouse Monitoring" />
+    <meta name="description" content="Real-time sensor monitoring, automation controls, and farming insights for modern agriculture. Monitor temperature, humidity, air quality and more." />
     <meta name="author" content="Farm Aadhar" />
+    <meta name="keywords" content="farm monitoring, agriculture, IoT sensors, greenhouse automation, smart farming" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="Farm Aadhar" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Farm Aadhar" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#10b981" />
+    
+    <!-- Icons and Manifest -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/placeholder.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <meta property="og:title" content="farm-insight-garden" />
-    <meta property="og:description" content="Lovable Generated Project" />
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:url" content="https://farmaadhar.nexverse.in/" />
+    <meta property="og:title" content="Farm Aadhar - Smart Polyhouse Monitoring" />
+    <meta property="og:description" content="Real-time sensor monitoring, automation controls, and farming insights for modern agriculture." />
+    <meta property="og:image" content="/placeholder.svg" />
 
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:url" content="https://farmaadhar.nexverse.in/" />
+    <meta name="twitter:title" content="Farm Aadhar - Smart Polyhouse Monitoring" />
+    <meta name="twitter:description" content="Real-time sensor monitoring, automation controls, and farming insights for modern agriculture." />
+    <meta name="twitter:image" content="/placeholder.svg" />
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('Service Worker registered successfully:', registration.scope);
+            })
+            .catch((error) => {
+              console.log('Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

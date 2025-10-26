@@ -1,21 +1,57 @@
 {
-  "name": "Farm Insight Garden",
-  "short_name": "FarmInsight",
-  "start_url": ".",
+  "name": "Farm Aadhar - Smart Polyhouse Monitoring",
+  "short_name": "Farm Aadhar",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#4f46e5",
-  "description": "Smart farm dashboard for sensor data and analysis.",
+  "background_color": "#0f172a",
+  "theme_color": "#10b981",
+  "description": "Real-time sensor monitoring, automation controls, and farming insights for modern agriculture.",
+  "orientation": "any",
+  "scope": "/",
+  "categories": ["productivity", "utilities", "agriculture"],
   "icons": [
     {
-      "src": "https://lootoo.in/pwa-192x192.png",
+      "src": "/placeholder.svg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/svg+xml",
+      "purpose": "any"
     },
     {
-      "src": "https://lootoo.in/pwa-512x512.png",
+      "src": "/placeholder.svg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/placeholder.svg",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View sensor data and monitoring",
+      "url": "/",
+      "icons": [{ "src": "/placeholder.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Controls",
+      "short_name": "Controls",
+      "description": "Manage automation rules",
+      "url": "/settings",
+      "icons": [{ "src": "/placeholder.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "News",
+      "short_name": "News",
+      "description": "Farming tips and news",
+      "url": "/news",
+      "icons": [{ "src": "/placeholder.svg", "sizes": "192x192" }]
     }
   ]
 }

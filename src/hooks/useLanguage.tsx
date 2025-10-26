@@ -12,7 +12,7 @@ interface Translations {
 const translations: Translations = {
   // Navigation
   dashboard: { en: 'Dashboard', hi: 'डैशबोर्ड' },
-  aiAnalysis: { en: 'AI Analysis', hi: 'AI विश्लेषण' },
+  news: { en: 'News & Tips', hi: 'समाचार और सुझाव' },
   tasks: { en: 'Tasks & Planning', hi: 'कार्य और योजना' },
   reports: { en: 'Reports', hi: 'रिपोर्ट' },
   settings: { en: 'Settings', hi: 'सेटिंग्स' },
@@ -37,6 +37,29 @@ const translations: Translations = {
   cancel: { en: 'Cancel', hi: 'रद्द करें' },
   edit: { en: 'Edit', hi: 'संपादित करें' },
   delete: { en: 'Delete', hi: 'हटाएं' },
+  search: { en: 'Search', hi: 'खोजें' },
+  back: { en: 'Back', hi: 'वापस' },
+  views: { en: 'views', hi: 'बार देखा गया' },
+  likes: { en: 'likes', hi: 'पसंद' },
+  
+  // News page
+  farmingNews: { en: 'Farming News & Tips', hi: 'खेती समाचार और सुझाव' },
+  newsDescription: { en: 'Stay updated with the latest farming insights, best practices, and expert advice', hi: 'नवीनतम खेती जानकारी, सर्वोत्तम प्रथाओं और विशेषज्ञ सलाह के साथ अपडेट रहें' },
+  searchPlaceholder: { en: 'Search articles, tags, topics...', hi: 'लेख, टैग, विषय खोजें...' },
+  noArticles: { en: 'No articles found', hi: 'कोई लेख नहीं मिला' },
+  featured: { en: 'Featured', hi: 'विशेष' },
+  backToArticles: { en: 'Back to Articles', hi: 'लेखों पर वापस जाएं' },
+  
+  // Categories
+  all: { en: 'All', hi: 'सभी' },
+  cropCare: { en: 'Crop Care', hi: 'फसल देखभाल' },
+  pestControl: { en: 'Pest Control', hi: 'कीट नियंत्रण' },
+  weather: { en: 'Weather', hi: 'मौसम' },
+  marketPrices: { en: 'Market', hi: 'बाजार' },
+  technology: { en: 'Technology', hi: 'तकनीक' },
+  bestPractices: { en: 'Best Practices', hi: 'सर्वोत्तम प्रथाएं' },
+  seasonalTips: { en: 'Seasonal', hi: 'मौसमी' },
+  general: { en: 'General', hi: 'सामान्य' },
   
   // Authentication
   login: { en: 'Login', hi: 'लॉगिन' },

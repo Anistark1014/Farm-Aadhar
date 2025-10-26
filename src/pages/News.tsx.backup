@@ -1,0 +1,821 @@
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Newspaper, Search, TrendingUp, Sprout, Bug, Cloud, DollarSign, Lightbulb, Calendar, CloudRain, Thermometer, Droplets, Wind, Sun, Sunrise, Sunset } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/useLanguage';
+import ReactMarkdown from 'react-markdown';
+import { 
+  fetchNews, 
+  likeArticle, 
+  incrementViewCount, 
+  NewsArticle 
+} from '@/api/news-api';
+import { getFarmingTips, getTipOfTheDay, FarmingTip } from '@/api/tips-service';
+import { 
+  getCurrentWeather, 
+  getWeatherForecast, 
+  getWeatherByCity, 
+  generateFarmingAdvice,
+  getUserLocation,
+  WeatherData, 
+  WeatherForecast, 
+  FarmingAdvice 
+} from '../api/weather-service';
+import { syncAllNews } from '@/api/live-news-service';
+
+const categoryIcons: Record<string, any> = {
+  general: Newspaper,
+  crop_care: Sprout,
+  pest_control: Bug,
+  weather: Cloud,
+  market_prices: DollarSign,
+  technology: Lightbulb,
+  best_practices: TrendingUp,
+  seasonal_tips: Calendar,
+};
+
+const categoryColors: Record<string, string> = {
+  general: 'bg-gray-500',
+  crop_care: 'bg-green-500',
+  pest_control: 'bg-red-500',
+  weather: 'bg-blue-500',
+  market_prices: 'bg-yellow-500',
+  technology: 'bg-purple-500',
+  government_schemes: 'bg-indigo-500',
+  best_practices: 'bg-emerald-500',
+  seasonal_tips: 'bg-orange-500',
+};
+
+export default function News() {
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [filteredArticles, setFilteredArticles] = useState<NewsArticle[]>([]);
+  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [loading, setLoading] = useState(true);
+  
+  // Tips state
+  const [tips, setTips] = useState<FarmingTip[]>([]);
+  const [selectedTip, setSelectedTip] = useState<FarmingTip | null>(null);
+  const [tipCategory, setTipCategory] = useState<string>('all');
+  
+  // Weather state
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [forecast, setForecast] = useState<WeatherForecast[]>([]);
+  const [farmingAdvice, setFarmingAdvice] = useState<FarmingAdvice[]>([]);
+  const [weatherCity, setWeatherCity] = useState('');
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  
+  const { toast } = useToast();
+  const { language, t } = useLanguage();
+
+  useEffect(() => {
+    fetchArticles();
+  }, [language]); // Re-fetch when language changes
+
+  useEffect(() => {
+    filterArticles();
+  }, [articles, searchQuery, selectedCategory]);
+
+  const fetchArticles = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchNews({
+        language,
+        limit: 20  // Load only 20 articles
+      });
+
+      setArticles(data);
+    } catch (error: any) {
+      toast({
+        title: t('error'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTips = async () => {
+    try {
+      const filters = tipCategory !== 'all' ? { category: tipCategory, language } : { language };
+      const data = await getFarmingTips(filters);
+      setTips(data);
+    } catch (error: any) {
+      console.error('Error fetching tips:', error);
+      toast({
+        title: 'Error loading tips',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const fetchWeather = async () => {
+    try {
+      setWeatherLoading(true);
+      
+      // Try to get user's location
+      const location = await getUserLocation();
+      const weatherData = await getCurrentWeather(location.lat, location.lon);
+      const forecastData = await getWeatherForecast(location.lat, location.lon);
+      const advice = generateFarmingAdvice(weatherData, forecastData);
+      
+      setWeather(weatherData);
+      setForecast(forecastData);
+      setFarmingAdvice(advice);
+    } catch (error: any) {
+      console.error('Error fetching weather:', error);
+      // Try fallback to a default city if geolocation fails
+      try {
+        const weatherData = await getWeatherByCity('Delhi');
+        const forecastData = await getWeatherForecast(28.7041, 77.1025); // Delhi coordinates
+        const advice = generateFarmingAdvice(weatherData, forecastData);
+        
+        setWeather(weatherData);
+        setForecast(forecastData);
+        setFarmingAdvice(advice);
+        setWeatherCity('Delhi');
+      } catch (fallbackError) {
+        toast({
+          title: 'Weather unavailable',
+          description: 'Unable to load weather data',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setWeatherLoading(false);
+    }
+  };
+
+  const handleCitySearch = async () => {
+    if (!weatherCity.trim()) return;
+    
+    try {
+      setWeatherLoading(true);
+      const weatherData = await getWeatherByCity(weatherCity);
+      // We need to get coordinates to fetch forecast
+      // For now, we'll skip the forecast for city search
+      // Or we can store coordinates in WeatherData
+      const advice = generateFarmingAdvice(weatherData, []);
+      
+      setWeather(weatherData);
+      setForecast([]); // No forecast available without coordinates
+      setFarmingAdvice(advice);
+      
+      toast({
+        title: 'Weather updated',
+        description: `Showing weather for ${weatherData.location}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'City not found',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setWeatherLoading(false);
+    }
+  };
+
+  const filterArticles = () => {
+    let filtered = articles;
+
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter((article) => article.category === selectedCategory);
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (article) =>
+          article.title.toLowerCase().includes(query) ||
+          article.summary?.toLowerCase().includes(query) ||
+          article.tags?.some((tag) => tag.toLowerCase().includes(query))
+      );
+    }
+
+    setFilteredArticles(filtered);
+  };
+
+  const handleArticleClick = async (article: NewsArticle) => {
+    setSelectedArticle(article);
+
+    // Increment view count
+    try {
+      await incrementViewCount(article.id);
+      // Update local state
+      setArticles(prev => 
+        prev.map(a => a.id === article.id ? { ...a, view_count: a.view_count + 1 } : a)
+      );
+    } catch (error) {
+      console.error('Error updating view count:', error);
+    }
+  };
+
+  const handleLike = async (article: NewsArticle) => {
+    try {
+      await likeArticle(article.id);
+
+      // Update local state
+      setArticles((prev) =>
+        prev.map((a) => (a.id === article.id ? { ...a, likes_count: a.likes_count + 1 } : a))
+      );
+
+      if (selectedArticle?.id === article.id) {
+        setSelectedArticle({ ...selectedArticle, likes_count: selectedArticle.likes_count + 1 });
+      }
+
+      toast({
+        title: 'Article liked!',
+        description: 'Thank you for your feedback.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const getCategoryLabel = (category: string): string => {
+    return category
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  if (selectedArticle) {
+    return (
+      <div className="container mx-auto p-6 max-w-4xl">
+        <Button
+          variant="outline"
+          onClick={() => setSelectedArticle(null)}
+          className="mb-4"
+        >
+          ← Back to Articles
+        </Button>
+
+        <Card>
+          {selectedArticle.featured_image_url && (
+            <img
+              src={selectedArticle.featured_image_url}
+              alt={selectedArticle.title}
+              className="w-full h-64 object-cover rounded-t-lg"
+            />
+          )}
+          
+          <CardHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge className={categoryColors[selectedArticle.category]}>
+                {getCategoryLabel(selectedArticle.category)}
+              </Badge>
+              {selectedArticle.is_featured && (
+                <Badge variant="secondary">Featured</Badge>
+              )}
+            </div>
+            
+            <CardTitle className="text-3xl">{selectedArticle.title}</CardTitle>
+            
+            {selectedArticle.subtitle && (
+              <CardDescription className="text-lg">
+                {selectedArticle.subtitle}
+              </CardDescription>
+            )}
+
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+              {selectedArticle.author && <span>By {selectedArticle.author}</span>}
+              <span>{new Date(selectedArticle.published_at).toLocaleDateString()}</span>
+              <span>{selectedArticle.view_count} views</span>
+              <span>{selectedArticle.likes_count} likes</span>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <div className="prose dark:prose-invert prose-green max-w-none">
+              <ReactMarkdown>{selectedArticle.content}</ReactMarkdown>
+            </div>
+
+            {selectedArticle.tags && selectedArticle.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-6">
+                {selectedArticle.tags.map((tag) => (
+                  <Badge key={tag} variant="outline">
+                    #{tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {selectedArticle.source_url && (
+              <div className="mt-6 p-4 bg-secondary/50 dark:bg-secondary/20 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  Original source:{' '}
+                  <a
+                    href={selectedArticle.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {selectedArticle.source_name || 'External Link'}
+                  </a>
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-4 mt-6">
+              <Button onClick={() => handleLike(selectedArticle)}>
+                ❤️ Like ({selectedArticle.likes_count})
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">Farming Hub</h1>
+        <p className="text-muted-foreground">
+          Stay updated with news, tips, and live weather for better farming decisions
+        </p>
+      </div>
+
+      {/* Main Tabs: News / Tips / Weather */}
+      <Tabs defaultValue="news" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="news" className="flex items-center gap-2">
+            <Newspaper className="w-4 h-4" />
+            News
+          </TabsTrigger>
+          <TabsTrigger value="tips" className="flex items-center gap-2">
+            <Lightbulb className="w-4 h-4" />
+            Tips
+          </TabsTrigger>
+          <TabsTrigger value="weather" className="flex items-center gap-2">
+            <CloudRain className="w-4 h-4" />
+            Weather
+          </TabsTrigger>
+        </TabsList>
+
+        {/* NEWS TAB */}
+        <TabsContent value="news">
+          {/* Search Bar and Sync Button */}
+          <div className="mb-6 flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search articles, tags, topics..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button 
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  await syncAllNews();
+                  await fetchArticles();
+                  toast({
+                    title: 'News synced!',
+                    description: '100+ latest articles fetched from NewsAPI',
+                  });
+                } catch (error: any) {
+                  toast({
+                    title: 'Sync failed',
+                    description: error.message,
+                    variant: 'destructive',
+                  });
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              variant="outline"
+              className="whitespace-nowrap"
+            >
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Sync Latest News
+            </Button>
+          </div>
+
+          {/* Category Tabs */}
+          <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-6">
+            <TabsList className="grid grid-cols-4 lg:grid-cols-9 gap-2">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="crop_care">Crop Care</TabsTrigger>
+              <TabsTrigger value="pest_control">Pest Control</TabsTrigger>
+              <TabsTrigger value="weather">Weather</TabsTrigger>
+              <TabsTrigger value="market_prices">Market</TabsTrigger>
+              <TabsTrigger value="technology">Technology</TabsTrigger>
+              <TabsTrigger value="best_practices">Best Practices</TabsTrigger>
+              <TabsTrigger value="seasonal_tips">Seasonal</TabsTrigger>
+              <TabsTrigger value="general">General</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* Articles Grid */}
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading articles...</p>
+            </div>
+          ) : filteredArticles.length === 0 ? (
+            <div className="text-center py-12">
+              <Newspaper className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
+              <p className="text-muted-foreground">No articles found. Click "Sync Latest News" to fetch articles.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredArticles.map((article) => {
+                const Icon = categoryIcons[article.category] || Newspaper;
+                
+                return (
+                  <Card
+                    key={article.id}
+                    className="cursor-pointer hover:shadow-lg transition-shadow"
+                    onClick={() => handleArticleClick(article)}
+                  >
+                    {(article.thumbnail_url || article.featured_image_url) && (
+                      <img
+                        src={article.thumbnail_url || article.featured_image_url || ''}
+                        alt={article.title}
+                        className="w-full h-48 object-cover rounded-t-lg"
+                      />
+                    )}
+                    
+                    <CardHeader>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon className="w-4 h-4" />
+                        <Badge className={categoryColors[article.category]}>
+                          {getCategoryLabel(article.category)}
+                        </Badge>
+                        {article.is_featured && (
+                          <Badge variant="secondary">Featured</Badge>
+                        )}
+                      </div>
+                      
+                      <CardTitle className="line-clamp-2">{article.title}</CardTitle>
+                      
+                      {article.summary && (
+                        <CardDescription className="line-clamp-3">
+                          {article.summary}
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+
+                    <CardContent>
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <span>{new Date(article.published_at).toLocaleDateString()}</span>
+                        <div className="flex gap-3">
+                          <span>{article.view_count} views</span>
+                          <span>❤️ {article.likes_count}</span>
+                        </div>
+                      </div>
+
+                      {article.tags && article.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-3">
+                          {article.tags.slice(0, 3).map((tag) => (
+                            <Badge key={tag} variant="outline" className="text-xs">
+                              #{tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* TIPS TAB */}
+        <TabsContent value="tips">
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">💡 Farming Tips & Best Practices</h2>
+                <p className="text-muted-foreground">Practical advice to improve your farming techniques</p>
+              </div>
+              <Badge variant="secondary" className="text-lg px-4 py-2">
+                {tips.length} Tips
+              </Badge>
+            </div>
+            
+            {/* Category Filter */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              <Button
+                variant={tipCategory === 'all' ? 'default' : 'outline'}
+                onClick={() => { setTipCategory('all'); fetchTips(); }}
+                size="sm"
+                className="rounded-full"
+              >
+                ⭐ All Tips
+              </Button>
+              <Button
+                variant={tipCategory === 'planting' ? 'default' : 'outline'}
+                onClick={() => { setTipCategory('planting'); fetchTips(); }}
+                size="sm"
+                className="rounded-full"
+              >
+                🌱 Planting
+              </Button>
+              <Button
+                variant={tipCategory === 'irrigation' ? 'default' : 'outline'}
+                onClick={() => { setTipCategory('irrigation'); fetchTips(); }}
+                size="sm"
+                className="rounded-full"
+              >
+                💧 Irrigation
+              </Button>
+              <Button
+                variant={tipCategory === 'pest_control' ? 'default' : 'outline'}
+                onClick={() => { setTipCategory('pest_control'); fetchTips(); }}
+                size="sm"
+                className="rounded-full"
+              >
+                🐛 Pest Control
+              </Button>
+              <Button
+                variant={tipCategory === 'fertilization' ? 'default' : 'outline'}
+                onClick={() => { setTipCategory('fertilization'); fetchTips(); }}
+                size="sm"
+                className="rounded-full"
+              >
+                🌿 Fertilization
+              </Button>
+              <Button
+                variant={tipCategory === 'harvesting' ? 'default' : 'outline'}
+                onClick={() => { setTipCategory('harvesting'); fetchTips(); }}
+                size="sm"
+                className="rounded-full"
+              >
+                🌾 Harvesting
+              </Button>
+              <Button
+                variant={tipCategory === 'soil_care' ? 'default' : 'outline'}
+                onClick={() => { setTipCategory('soil_care'); fetchTips(); }}
+                size="sm"
+                className="rounded-full"
+              >
+                🏞️ Soil Care
+              </Button>
+            </div>
+
+            {/* Tips Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {tips.map((tip) => (
+                <Card 
+                  key={tip.id} 
+                  className="hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer border-2 hover:border-primary"
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <Badge 
+                        variant={
+                          tip.difficulty === 'beginner' ? 'secondary' : 
+                          tip.difficulty === 'intermediate' ? 'default' : 
+                          'destructive'
+                        }
+                        className="text-xs font-semibold"
+                      >
+                        {tip.difficulty.toUpperCase()}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {tip.category.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-lg leading-tight flex items-start gap-2">
+                      <span className="text-2xl">
+                        {tip.category === 'planting' ? '🌱' :
+                         tip.category === 'irrigation' ? '💧' :
+                         tip.category === 'pest_control' ? '🐛' :
+                         tip.category === 'fertilization' ? '🌿' :
+                         tip.category === 'harvesting' ? '🌾' :
+                         tip.category === 'soil_care' ? '🏞️' : '💡'}
+                      </span>
+                      <span className="flex-1">
+                        {language === 'hi' ? tip.title_hi : tip.title}
+                      </span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-4">
+                      {language === 'hi' ? tip.content_hi : tip.content}
+                    </p>
+                    {tip.related_crops && tip.related_crops.length > 0 && (
+                      <div className="pt-3 border-t">
+                        <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+                          <Sprout className="w-3 h-3" />
+                          {language === 'hi' ? 'संबंधित फसलें:' : 'Related Crops:'}
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {tip.related_crops.slice(0, 3).map((crop) => (
+                            <Badge key={crop} variant="outline" className="text-xs">
+                              {crop}
+                            </Badge>
+                          ))}
+                          {tip.related_crops.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{tip.related_crops.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {tips.length === 0 && (
+              <div className="text-center py-12">
+                <Lightbulb className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
+                <p className="text-muted-foreground">No tips available</p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* WEATHER TAB */}
+        <TabsContent value="weather">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold mb-4">Live Weather & Farming Advice</h2>
+            
+            {/* City Search */}
+            <div className="flex gap-2 mb-6">
+              <Input
+                placeholder="Enter city name..."
+                value={weatherCity}
+                onChange={(e) => setWeatherCity(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCitySearch()}
+              />
+              <Button onClick={handleCitySearch} disabled={weatherLoading}>
+                <Search className="w-4 h-4 mr-2" />
+                Search
+              </Button>
+              <Button onClick={fetchWeather} variant="outline" disabled={weatherLoading}>
+                <Sun className="w-4 h-4 mr-2" />
+                Detect Location
+              </Button>
+            </div>
+
+            {weatherLoading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Loading weather data...</p>
+              </div>
+            ) : weather ? (
+              <div className="space-y-6">
+                {/* Current Weather */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sun className="w-6 h-6" />
+                      Current Weather - {weather.location}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center p-4 bg-secondary/50 dark:bg-secondary/20 rounded-lg">
+                        <Thermometer className="w-8 h-8 mx-auto mb-2 text-orange-500" />
+                        <p className="text-3xl font-bold">{weather.temperature}°C</p>
+                        <p className="text-sm text-muted-foreground">Temperature</p>
+                        <p className="text-xs text-muted-foreground">Feels like {weather.feels_like}°C</p>
+                      </div>
+                      <div className="text-center p-4 bg-secondary/50 dark:bg-secondary/20 rounded-lg">
+                        <Droplets className="w-8 h-8 mx-auto mb-2 text-blue-500" />
+                        <p className="text-3xl font-bold">{weather.humidity}%</p>
+                        <p className="text-sm text-muted-foreground">Humidity</p>
+                      </div>
+                      <div className="text-center p-4 bg-secondary/50 dark:bg-secondary/20 rounded-lg">
+                        <Wind className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-3xl font-bold">{weather.wind_speed} m/s</p>
+                        <p className="text-sm text-muted-foreground">Wind Speed</p>
+                      </div>
+                      <div className="text-center p-4 bg-secondary/50 dark:bg-secondary/20 rounded-lg">
+                        <CloudRain className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                        <p className="text-3xl font-bold">{weather.rainfall || 0} mm</p>
+                        <p className="text-sm text-muted-foreground">Rainfall</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                      <p className="text-center capitalize font-semibold">
+                        <strong>{weather.description}</strong>
+                      </p>
+                      <div className="flex justify-center gap-8 mt-2 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Sunrise className="w-4 h-4" />
+                          {new Date(weather.sunrise * 1000).toLocaleTimeString()}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Sunset className="w-4 h-4" />
+                          {new Date(weather.sunset * 1000).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Farming Advice */}
+                {farmingAdvice.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Lightbulb className="w-6 h-6" />
+                        Farming Advice Based on Weather
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {farmingAdvice.map((advice, index) => (
+                          <div
+                            key={index}
+                            className={`p-4 rounded-lg border-l-4 ${
+                              advice.priority === 'high'
+                                ? 'bg-red-50 border-red-500'
+                                : advice.priority === 'medium'
+                                ? 'bg-yellow-50 border-yellow-500'
+                                : 'bg-green-50 border-green-500'
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <span className="text-2xl">{advice.icon}</span>
+                              <div className="flex-1">
+                                <Badge variant="outline" className="mb-2">
+                                  {advice.category}
+                                </Badge>
+                                <p className="text-gray-700">
+                                  {language === 'hi' ? advice.advice_hi : advice.advice}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* 5-Day Forecast */}
+                {forecast.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Calendar className="w-6 h-6" />
+                        5-Day Forecast
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        {forecast.map((day, index) => (
+                          <div key={index} className="text-center p-4 bg-secondary/50 dark:bg-secondary/20 rounded-lg">
+                            <p className="font-semibold mb-2">
+                              {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                            </p>
+                            <img
+                              src={`https://openweathermap.org/img/wn/${day.icon}@2x.png`}
+                              alt={day.description}
+                              className="w-16 h-16 mx-auto"
+                            />
+                            <p className="text-sm text-muted-foreground capitalize mb-2">{day.description}</p>
+                            <p className="text-lg font-bold text-orange-600 dark:text-orange-400">{day.temp_max}°</p>
+                            <p className="text-sm text-blue-600 dark:text-blue-400">{day.temp_min}°</p>
+                            <div className="mt-2 flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                              <Droplets className="w-3 h-3" />
+                              <span>{day.humidity}%</span>
+                            </div>
+                            {day.rainfall > 0 && (
+                              <div className="mt-1 flex items-center justify-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+                                <CloudRain className="w-3 h-3" />
+                                <span>{day.rainfall}mm</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Cloud className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
+                <p className="text-muted-foreground">No weather data available</p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

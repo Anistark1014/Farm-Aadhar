@@ -39,23 +39,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      } else {
-        // Auto sign in with anonymous user for demo purposes
-        supabase.auth.signInAnonymously().then(({ data, error }) => {
-          if (error) {
-            console.error('Auto sign in failed:', error);
-            setLoading(false);
-          } else {
-            setSession(data.session);
-            setUser(data.user);
-            setLoading(false);
-          }
-        });
-      }
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();

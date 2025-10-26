@@ -12,7 +12,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import AIAnalysis from "./pages/AIAnalysis";
+import News from "./pages/News";
 import Tasks from "./pages/Tasks";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
@@ -60,7 +60,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
           <LanguageProvider>
             <ThemeProvider>
@@ -76,7 +76,7 @@ const App = () => (
                   </ProtectedRoute>
                 }>
                   <Route index element={<Index />} />
-                  <Route path="ai" element={<AIAnalysis />} />
+                  <Route path="news" element={<News />} />
                   <Route path="tasks" element={<Tasks />} />
                   <Route path="reports" element={<Reports />} />
                   <Route path="settings" element={<Settings />} />

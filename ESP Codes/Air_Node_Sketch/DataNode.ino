@@ -49,7 +49,7 @@ const int WIFI_NETWORK_COUNT = 2;
 // ============================================================================
 
 const char* SUPABASE_URL = "https://dlmqiqhwnxbffawfblrz.supabase.co";
-const char* SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsbXFpcWh3bnhiZmZhd2ZibHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk1MzA4MDUsImV4cCI6MjA1NTEwNjgwNX0.kKMJ2G1DvMHRk_e_jlYw_F_1y-AGYeAixVBRYqOwSl0";
+const char* SUPABASE_ANON_KEY = "sb_publishable_nhCSaz82TxoxvJKo2wjsCQ_JProPW6l";
 const char* SUPABASE_ENDPOINT = "/rest/v1/sensor_readings";
 
 // ============================================================================
@@ -389,12 +389,18 @@ void sendSensorData() {
   String jsonPayload;
   serializeJson(doc, jsonPayload);
 
+  // Debug: Print what we're sending
+  Serial.println("📤 Sending to Supabase:");
+  Serial.println("   URL: " + serverPath);
+  Serial.println("   Payload: " + jsonPayload);
+
   // Configure HTTP client
   http.begin(serverPath);
   http.setTimeout(10000);
   http.addHeader("Content-Type", "application/json");
   http.addHeader("apikey", SUPABASE_ANON_KEY);
   http.addHeader("Authorization", String("Bearer ") + SUPABASE_ANON_KEY);
+  http.addHeader("Prefer", "return=minimal");  // Add this for better compatibility
 
   // Send data
   int httpResponseCode = http.POST(jsonPayload);
@@ -406,6 +412,24 @@ void sendSensorData() {
     digitalWrite(LED_PIN, WiFi.status() == WL_CONNECTED ? HIGH : LOW);
   } else {
     Serial.printf("❌ Send failed: HTTP %d\n", httpResponseCode);
+    
+    // Print detailed error information
+    if (httpResponseCode == 401) {
+      Serial.println("   🔑 Authentication Error:");
+      Serial.println("   - Check if Supabase anon key is correct");
+      Serial.println("   - Verify RLS policies allow INSERT");
+      Serial.println("   - Check if API key has expired");
+    } else if (httpResponseCode == 400) {
+      Serial.println("   ⚠️ Bad Request - Check data format");
+    } else if (httpResponseCode == 403) {
+      Serial.println("   🚫 Forbidden - RLS policy blocking insert");
+    }
+    
+    // Print response body for debugging
+    String response = http.getString();
+    if (response.length() > 0 && response.length() < 500) {
+      Serial.println("   Response: " + response);
+    }
   }
 
   http.end();
