@@ -46,12 +46,18 @@
 // EMAIL CONFIGURATION (Using HTTP POST to email service)
 // ============================================================================
 
-// Using EmailJS or similar service to send emails
+// IMPORTANT: Configure EmailJS service at https://www.emailjs.com/
+// 1. Create a free account at EmailJS
+// 2. Add an email service (Gmail, Outlook, etc.)
+// 3. Create email templates (template_daily_data, template_daily_report, template_session_data)
+// 4. Get your Public Key from the API Keys section
+// 5. Replace the values below with your actual keys
+
 const char* EMAIL_SERVICE_URL = "https://api.emailjs.com/api/v1.0/email/send";
-const char* EMAIL_SERVICE_ID = "service_farminsight";     // You'll set this up
-const char* EMAIL_TEMPLATE_ID = "template_daily_data";   
-const char* EMAIL_PUBLIC_KEY = "your_emailjs_public_key";
-const char* RECIPIENT_EMAIL = "Aniketsadakale1014@gmail.com";
+const char* EMAIL_SERVICE_ID = "service_farminsight";        // Replace with your EmailJS Service ID
+const char* EMAIL_TEMPLATE_ID = "template_daily_data";       // Replace with your EmailJS Template ID
+const char* EMAIL_PUBLIC_KEY = "YOUR_EMAILJS_PUBLIC_KEY";    // **REQUIRED** Replace with your EmailJS Public Key
+const char* RECIPIENT_EMAIL = "Aniketsadakale1014@gmail.com"; // Your email address
 
 // ============================================================================
 // DAILY FILE STORAGE CONFIGURATION
@@ -83,8 +89,14 @@ const int WIFI_NETWORK_COUNT = 2;
 // SUPABASE DATABASE CONFIGURATION
 // ============================================================================
 
+// IMPORTANT: Get these values from your Supabase project dashboard
+// 1. Go to https://app.supabase.com/project/YOUR_PROJECT/settings/api
+// 2. Copy the "Project URL" (should end with .supabase.co)
+// 3. Copy the "anon/public" key (NOT the service_role key for security)
+// 4. Replace the values below
+
 const char* SUPABASE_URL = "https://dlmqiqhwnxbffawfblrz.supabase.co";
-const char* SUPABASE_ANON_KEY = "sb_publishable_nhCSaz82TxoxvJKo2wjsCQ_JProPW6l";  // Fixed: Using anon key instead of service role key
+const char* SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsbXFpcWh3bnhiZmZhd2ZibHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk1MzA4MDUsImV4cCI6MjA1NTEwNjgwNX0.kKMJ2G1DvMHRk_e_jlYw_F_1y-AGYeAixVBRYqOwSl0";  // Replace with your actual anon key
 const char* SUPABASE_ENDPOINT = "/rest/v1/sensor_readings";
 
 // ============================================================================
@@ -103,8 +115,10 @@ const char* SUPABASE_ENDPOINT = "/rest/v1/sensor_readings";
 DHT_Unified dht(DHTPIN, DHTTYPE);
 
 // LCD Configuration
+// IMPORTANT: Use I2C scanner to find your LCD address (usually 0x27 or 0x3F)
+// Uncomment the scanI2CDevices() call in setup() to scan for devices
 #ifdef USE_LCD
-const int LCD_ADDRESS = 0x27;
+const int LCD_ADDRESS = 0x27;  // **VERIFY THIS** Common values: 0x27, 0x3F
 const int LCD_COLS = 16;
 const int LCD_ROWS = 2;
 LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLS, LCD_ROWS);
@@ -163,6 +177,7 @@ void testJSONPayload();         // New function to test payload format
 void updateDisplay();
 void checkDashboardStatus();
 void blinkLED(int times = 1, int delayMs = 100);
+void scanI2CDevices();          // New I2C scanner function
 
 // Daily file storage and email functions
 void saveSensorDataToDaily();
@@ -198,6 +213,58 @@ void handleSendDailyReport();      // Manual daily report
 void handleSendSessionData();      // Manual session data email
 
 // ============================================================================
+// I2C SCANNER UTILITY
+// ============================================================================
+
+void scanI2CDevices() {
+  Serial.println("\n🔍 Scanning I2C bus for devices...");
+  Serial.println("====================================");
+  
+  Wire.begin(21, 22); // Initialize I2C with ESP32 default pins
+  delay(100);
+  
+  byte error, address;
+  int deviceCount = 0;
+  
+  for (address = 1; address < 127; address++) {
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+    
+    if (error == 0) {
+      Serial.print("✅ I2C device found at address 0x");
+      if (address < 16) Serial.print("0");
+      Serial.print(address, HEX);
+      Serial.println(" !");
+      
+      // Identify common devices
+      if (address == 0x27 || address == 0x3F) {
+        Serial.println("   → Likely LCD display (PCF8574)");
+      }
+      
+      deviceCount++;
+    }
+    else if (error == 4) {
+      Serial.print("❌ Unknown error at address 0x");
+      if (address < 16) Serial.print("0");
+      Serial.println(address, HEX);
+    }
+  }
+  
+  Serial.println("====================================");
+  if (deviceCount == 0) {
+    Serial.println("❌ No I2C devices found!");
+    Serial.println("💡 Troubleshooting tips:");
+    Serial.println("   1. Check wiring: SDA → GPIO 21, SCL → GPIO 22");
+    Serial.println("   2. Check power supply to devices");
+    Serial.println("   3. Verify pull-up resistors (usually built-in)");
+    Serial.println("   4. Try different I2C addresses");
+  } else {
+    Serial.printf("✅ Found %d I2C device(s)\n", deviceCount);
+  }
+  Serial.println();
+}
+
+// ============================================================================
 // SETUP FUNCTION
 // ============================================================================
 
@@ -224,6 +291,10 @@ void setup() {
     default: Serial.println("Unknown reset reason"); break;
   }
   Serial.println("==================================================");
+
+  // OPTIONAL: Uncomment the line below to scan for I2C devices
+  // This helps you find the correct LCD address (0x27 or 0x3F)
+  // scanI2CDevices();
 
   setupHardware();
   connectToWiFi();
@@ -371,23 +442,41 @@ void setupHardware() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
-  // LCD Setup
+  // LCD Setup - Explicit I2C initialization to fix NACK error
 #ifdef USE_LCD
+  Serial.println("🔧 Initializing I2C LCD...");
+  
+  // Explicitly initialize the I2C bus on the correct pins
+  // ESP32 default pins: GPIO 21 (SDA) and GPIO 22 (SCL)
+  Wire.begin(21, 22);
+  delay(100); // Give I2C bus time to stabilize
+  
+  // Initialize the LCD
   lcd.init();
   lcd.backlight();
+  
+  // Check if LCD responds (simple test)
   lcd.setCursor(0, 0);
   lcd.print("Starting...");
   lcd.setCursor(0, 1);
   lcd.print("Air Quality Node");
+  
+  Serial.println("✅ LCD initialized successfully.");
+  Serial.println("   If you see garbage on LCD, check I2C address (0x27 or 0x3F)");
+  Serial.println("   Use I2C scanner to find correct address if needed");
+#else
+  Serial.println("ℹ️  LCD disabled (USE_LCD not defined)");
 #endif
 
   // DHT Sensor Setup
   dht.begin();
+  Serial.println("🌡️  DHT11 sensor initialized");
   
   // MQ Sensor Pins
   pinMode(MQ135_PIN, INPUT);
   pinMode(MQ3_PIN, INPUT);
   pinMode(MQ2_PIN, INPUT);
+  Serial.println("💨 Gas sensors initialized (MQ-135, MQ-3, MQ-2)");
 
   // SPIFFS for data caching
   if (!SPIFFS.begin(true)) {
