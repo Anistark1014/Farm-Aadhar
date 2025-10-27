@@ -11,15 +11,15 @@
   "categories": ["productivity", "utilities", "agriculture"],
   "icons": [
     {
-      "src": "/placeholder.svg",
+      "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/placeholder.svg",
+      "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
@@ -37,21 +37,21 @@
       "short_name": "Dashboard",
       "description": "View sensor data and monitoring",
       "url": "/",
-      "icons": [{ "src": "/placeholder.svg", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Controls",
       "short_name": "Controls",
       "description": "Manage automation rules",
       "url": "/settings",
-      "icons": [{ "src": "/placeholder.svg", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "News",
       "short_name": "News",
       "description": "Farming tips and news",
       "url": "/news",
-      "icons": [{ "src": "/placeholder.svg", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
