@@ -284,3 +284,13 @@ All colors are in HSL format for semantic theming
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--primary)) hsl(var(--muted));
 }
+
+/* Hide scrollbar for mobile tabs */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

@@ -24,15 +24,90 @@ import {
   Sun, 
   User, 
   LogOut,
-  Globe
+  Globe,
+  Play,
+  Square,
+  Database
 } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 
 export function TopBar() {
   const { user } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const { toast } = useToast();
+
+  // Mobile simulation state
+  const [isSimRunning, setIsSimRunning] = useState(() => {
+    return localStorage.getItem('simulationRunning') === 'true';
+  });
+  const [isCollectionActive, setIsCollectionActive] = useState(() => {
+    return localStorage.getItem('espConnectionEnabled') === 'true';
+  });
+
+  // Listen for storage changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setIsSimRunning(localStorage.getItem('simulationRunning') === 'true');
+      setIsCollectionActive(localStorage.getItem('espConnectionEnabled') === 'true');
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('simulationStateChanged', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('simulationStateChanged', handleStorageChange);
+    };
+  }, []);
+
+  const toggleSimulation = () => {
+    const newState = !isSimRunning;
+    setIsSimRunning(newState);
+    localStorage.setItem('simulationRunning', String(newState));
+    window.dispatchEvent(new Event('simulationStateChanged'));
+    toast({
+      title: newState ? "Simulation Started" : "Simulation Stopped",
+      description: newState ? "Generating simulated sensor data" : "Simulation paused",
+    });
+  };
+
+  const toggleDataCollection = async () => {
+    const newState = !isCollectionActive;
+    setIsCollectionActive(newState);
+    localStorage.setItem('espConnectionEnabled', String(newState));
+    window.dispatchEvent(new Event('simulationStateChanged'));
+
+    try {
+      const { error } = await supabase
+        .from('data_collection_settings')
+        .update({ 
+          is_active: newState,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', 1);
+
+      if (error) throw error;
+
+      toast({
+        title: newState ? "Data Collection Started" : "Data Collection Stopped",
+        description: newState ? "Storing sensor data to database" : "Data collection paused",
+      });
+    } catch (error) {
+      console.error('Error updating collection state:', error);
+      setIsCollectionActive(!newState);
+      localStorage.setItem('espConnectionEnabled', String(!newState));
+      window.dispatchEvent(new Event('simulationStateChanged'));
+      toast({
+        title: "Error",
+        description: "Failed to update data collection state",
+        variant: "destructive",
+      });
+    }
+  };
 
   const formatTime = () => {
     return new Date().toLocaleString(language === 'hi' ? 'hi-IN' : 'en-US', {
@@ -54,6 +129,32 @@ export function TopBar() {
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <SidebarTrigger className="p-2" />
+          
+          {/* Mobile Simulation Controls */}
+          <div className="flex items-center gap-1 md:hidden">
+            <Button
+              variant={isSimRunning ? "default" : "outline"}
+              size="sm"
+              onClick={toggleSimulation}
+              className="h-8 px-2 text-xs"
+              title={isSimRunning ? "Stop Simulation" : "Start Simulation"}
+            >
+              {isSimRunning ? <Square className="h-3 w-3 mr-1" /> : <Play className="h-3 w-3 mr-1" />}
+              <span className="hidden xs:inline">Sim</span>
+            </Button>
+            
+            <Button
+              variant={isCollectionActive ? "default" : "outline"}
+              size="sm"
+              onClick={toggleDataCollection}
+              className="h-8 px-2 text-xs"
+              title={isCollectionActive ? "Stop Collection" : "Start Collection"}
+            >
+              <Database className="h-3 w-3 mr-1" />
+              <span className="hidden xs:inline">Data</span>
+            </Button>
+          </div>
+          
           <div className="hidden md:block">
             <h2 className="text-lg font-semibold text-foreground">
               {t('welcome')}, {user?.user_metadata?.name || user?.email?.split('@')[0] || 'Farmer'}!
@@ -78,7 +179,10 @@ export function TopBar() {
           </Select>
 
             {/* Simulation Buttons */}
-            <SimulationController />
+            {/* Desktop Simulation Controller */}
+        <div className="hidden md:block">
+          <SimulationController />
+        </div>
 
           {/* Theme Toggle */}
           <Button
@@ -95,12 +199,12 @@ export function TopBar() {
           </Button>
 
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="h-9 w-9 relative">
+          {/* <Button variant="ghost" size="icon" className="h-9 w-9 relative">
             <Bell className="h-4 w-4" />
             <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full text-xs flex items-center justify-center text-destructive-foreground">
               2
             </span>
-          </Button>
+          </Button> */}
 
           {/* User Menu */}
           <DropdownMenu>

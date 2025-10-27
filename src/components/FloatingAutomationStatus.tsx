@@ -268,11 +268,11 @@ const FloatingAutomationStatus = () => {
   return (
     <>
       {/* Floating Button - No animations, just icons */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50">
         <Button
           onClick={() => setIsOpen(!isOpen)}
           size="lg"
-          className={`rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-colors duration-300 ${getButtonColor()}`}
+          className={`rounded-full w-12 h-12 md:w-14 md:h-14 shadow-lg hover:shadow-xl transition-colors duration-300 ${getButtonColor()}`}
           title={`Automation Status: ${devices.filter(d => d.isActive).length} devices active`}
         >
           {getButtonIcon()}
@@ -281,12 +281,12 @@ const FloatingAutomationStatus = () => {
 
       {/* Popup Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md mx-auto">
-            <CardContent className="p-6">
+        <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-3 md:p-4">
+          <Card className="w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Zap className="w-5 h-5" />
+                <h3 className="text-base md:text-lg font-semibold flex items-center gap-2">
+                  <Zap className="w-4 h-4 md:w-5 md:h-5" />
                   Automation Status
                 </h3>
                 <Button
@@ -303,7 +303,7 @@ const FloatingAutomationStatus = () => {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                   {devices.map((device) => (
                     <div 
                       key={device.id}
@@ -314,13 +314,13 @@ const FloatingAutomationStatus = () => {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className={`${getDeviceColor(device)} ${getDeviceAnimation(device)}`}>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className={`${getDeviceColor(device)} ${getDeviceAnimation(device)} flex-shrink-0`}>
                             {device.icon}
                           </div>
-                          <span className="font-medium text-sm">{device.name}</span>
+                          <span className="font-medium text-sm truncate">{device.name}</span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           {device.isActive ? (
                             <Power className="w-4 h-4 text-green-500" />
                           ) : (
@@ -348,7 +348,7 @@ const FloatingAutomationStatus = () => {
                           <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs">
                             <span className="font-medium">⚡ Triggered:</span>
                             <br />
-                            <span className="text-muted-foreground">{device.reason}</span>
+                            <span className="text-muted-foreground break-words">{device.reason}</span>
                           </div>
                         )}
                       </div>

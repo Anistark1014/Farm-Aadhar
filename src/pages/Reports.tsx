@@ -140,18 +140,18 @@ export default function Reports() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-3 md:p-4 lg:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-2">
-          <FileBarChart className="h-6 w-6" />
-          <h1 className="text-2xl font-bold">{t('Reports & Analytics')}</h1>
+          <FileBarChart className="h-5 w-5 md:h-6 md:w-6" />
+          <h1 className="text-xl md:text-2xl font-bold truncate">{t('Reports & Analytics')}</h1>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={exportData} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={exportData} variant="outline" size="sm" className="text-xs md:text-sm">
+            <Download className="h-3 w-3 md:h-4 md:w-4 mr-2" />
             {t('Export Report')}
           </Button>
-          <Button onClick={clearAllRecords} variant="destructive">
+          <Button onClick={clearAllRecords} variant="destructive" size="sm" className="text-xs md:text-sm">
             Clear All Records
           </Button>
         </div>
@@ -159,14 +159,14 @@ export default function Reports() {
 
       {/* Report Controls */}
       <Card>
-        <CardHeader>
-          <CardTitle>{t('Report Settings')}</CardTitle>
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="text-base md:text-lg">{t('Report Settings')}</CardTitle>
         </CardHeader>
-        <CardContent className="flex gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{t('Time Period')}</label>
+        <CardContent className="flex flex-col sm:flex-row gap-3 md:gap-4 p-3 md:p-6 pt-0">
+          <div className="space-y-2 flex-1">
+            <label className="text-xs md:text-sm font-medium">{t('Time Period')}</label>
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -176,10 +176,10 @@ export default function Reports() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{t('Primary Metric')}</label>
+          <div className="space-y-2 flex-1">
+            <label className="text-xs md:text-sm font-medium">{t('Primary Metric')}</label>
             <Select value={selectedMetric} onValueChange={setSelectedMetric}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -199,50 +199,50 @@ export default function Reports() {
       </Card>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{t('Sensor Readings')}</p>
-                <p className="text-2xl font-bold">{sensorData.length}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-muted-foreground truncate">{t('Sensor Readings')}</p>
+                <p className="text-lg md:text-2xl font-bold">{sensorData.length}</p>
               </div>
-              <Activity className="h-8 w-8 text-blue-600" />
+              <Activity className="h-6 w-6 md:h-8 md:w-8 text-blue-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{t('Tasks Completed')}</p>
-                <p className="text-2xl font-bold text-green-600">{taskStats.completed}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-muted-foreground truncate">{t('Tasks Completed')}</p>
+                <p className="text-lg md:text-2xl font-bold text-green-600">{taskStats.completed}</p>
               </div>
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
+              <CheckCircle2 className="h-6 w-6 md:h-8 md:w-8 text-green-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{t('Active Alerts')}</p>
-                <p className="text-2xl font-bold text-red-600">{alertsData.length}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-muted-foreground truncate">{t('Active Alerts')}</p>
+                <p className="text-lg md:text-2xl font-bold text-red-600">{alertsData.length}</p>
               </div>
-              <AlertCircle className="h-8 w-8 text-red-600" />
+              <AlertCircle className="h-6 w-6 md:h-8 md:w-8 text-red-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{t('Efficiency')}</p>
-                <p className="text-2xl font-bold text-purple-600">
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-muted-foreground truncate">{t('Efficiency')}</p>
+                <p className="text-lg md:text-2xl font-bold text-purple-600">
                   {tasksData.length > 0 ? Math.round((taskStats.completed / tasksData.length) * 100) : 0}%
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-600" />
+              <TrendingUp className="h-6 w-6 md:h-8 md:w-8 text-purple-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>

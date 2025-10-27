@@ -142,37 +142,38 @@ export default function Tasks() {
   );
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('Tasks & Planning')}</h1>
+    <div className="p-3 md:p-4 lg:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-xl md:text-2xl font-bold">{t('Tasks & Planning')}</h1>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              {t('Add Task')}
+            <Button size="sm" className="w-full sm:w-auto">
+              <Plus className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+              <span className="text-xs md:text-sm">{t('Add Task')}</span>
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>{t('Create New Task')}</DialogTitle>
+              <DialogTitle className="text-base md:text-lg">{t('Create New Task')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <label className="text-xs md:text-sm font-medium mb-2 block">
                   {t('Task Description')}
                 </label>
                 <Textarea
                   placeholder={t('Describe the task...')}
                   value={newTask.description}
                   onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                  className="text-sm"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <label className="text-xs md:text-sm font-medium mb-2 block">
                   {t('Priority')}
                 </label>
                 <Select value={newTask.priority} onValueChange={(value) => setNewTask({ ...newTask, priority: value })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -183,16 +184,17 @@ export default function Tasks() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">
+                <label className="text-xs md:text-sm font-medium mb-2 block">
                   {t('Due Date')} ({t('Optional')})
                 </label>
                 <Input
                   type="date"
                   value={newTask.dueDate}
                   onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                  className="text-sm"
                 />
               </div>
-              <Button onClick={handleCreateTask} className="w-full" disabled={createTaskMutation.isPending}>
+              <Button onClick={handleCreateTask} className="w-full text-xs md:text-sm" size="sm" disabled={createTaskMutation.isPending}>
                 {createTaskMutation.isPending ? t('Creating...') : t('Create Task')}
               </Button>
             </div>
@@ -201,48 +203,48 @@ export default function Tasks() {
       </div>
 
       {/* Task Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{t('Total Tasks')}</p>
-                <p className="text-2xl font-bold">{tasks.length}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-muted-foreground truncate">{t('Total Tasks')}</p>
+                <p className="text-lg md:text-2xl font-bold">{tasks.length}</p>
               </div>
-              <CheckCircle2 className="h-8 w-8 text-muted-foreground" />
+              <CheckCircle2 className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{t('Pending')}</p>
-                <p className="text-2xl font-bold text-blue-600">{pendingTasks.length}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-muted-foreground truncate">{t('Pending')}</p>
+                <p className="text-lg md:text-2xl font-bold text-blue-600">{pendingTasks.length}</p>
               </div>
-              <Clock className="h-8 w-8 text-blue-600" />
+              <Clock className="h-6 w-6 md:h-8 md:w-8 text-blue-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{t('Completed')}</p>
-                <p className="text-2xl font-bold text-green-600">{completedTasks.length}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-muted-foreground truncate">{t('Completed')}</p>
+                <p className="text-lg md:text-2xl font-bold text-green-600">{completedTasks.length}</p>
               </div>
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
+              <CheckCircle2 className="h-6 w-6 md:h-8 md:w-8 text-green-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{t('Overdue')}</p>
-                <p className="text-2xl font-bold text-red-600">{overdueTasks.length}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-muted-foreground truncate">{t('Overdue')}</p>
+                <p className="text-lg md:text-2xl font-bold text-red-600">{overdueTasks.length}</p>
               </div>
-              <AlertCircle className="h-8 w-8 text-red-600" />
+              <AlertCircle className="h-6 w-6 md:h-8 md:w-8 text-red-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -250,46 +252,46 @@ export default function Tasks() {
 
       {/* Tasks List */}
       <Card>
-        <CardHeader>
-          <CardTitle>{t('All Tasks')}</CardTitle>
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="text-base md:text-lg">{t('All Tasks')}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 md:p-6 pt-0">
           {isLoading ? (
-            <p className="text-muted-foreground">{t('Loading tasks...')}</p>
+            <p className="text-xs md:text-sm text-muted-foreground">{t('Loading tasks...')}</p>
           ) : tasks.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
+            <p className="text-xs md:text-sm text-muted-foreground text-center py-8">
               {t('No tasks yet. Create your first task to get started!')}
             </p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {tasks.map((task) => (
-                <div key={task.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3 flex-1">
+                <div key={task.id} className="border rounded-lg p-3 md:p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2 md:gap-3 flex-1 min-w-0">
                       <Checkbox
                         checked={task.is_completed}
                         onCheckedChange={(checked) => 
                           toggleTaskMutation.mutate({ id: task.id, completed: !!checked })
                         }
-                        className="mt-1"
+                        className="mt-1 flex-shrink-0"
                       />
-                      <div className="flex-1">
-                        <p className={`font-medium ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm md:text-base font-medium break-words ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
                           {task.task_description}
                         </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge className={getPriorityColor(task.priority)}>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <Badge className={`${getPriorityColor(task.priority)} text-xs flex items-center gap-1`}>
                             {getPriorityIcon(task.priority)}
-                            <span className="ml-1 capitalize">{task.priority}</span>
+                            <span className="capitalize">{task.priority}</span>
                           </Badge>
                           {task.due_date && (
-                            <Badge variant="outline" className="flex items-center gap-1">
+                            <Badge variant="outline" className="flex items-center gap-1 text-xs">
                               <Calendar className="h-3 w-3" />
-                              {new Date(task.due_date).toLocaleDateString()}
+                              <span className="truncate">{new Date(task.due_date).toLocaleDateString()}</span>
                             </Badge>
                           )}
                           {task.due_date && new Date(task.due_date) < new Date() && !task.is_completed && (
-                            <Badge variant="destructive">{t('Overdue')}</Badge>
+                            <Badge variant="destructive" className="text-xs">{t('Overdue')}</Badge>
                           )}
                         </div>
                       </div>
@@ -298,7 +300,7 @@ export default function Tasks() {
                       variant="ghost"
                       size="sm"
                       onClick={() => deleteTaskMutation.mutate(task.id)}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-red-600 hover:text-red-700 flex-shrink-0 text-xs md:text-sm"
                     >
                       {t('Delete')}
                     </Button>

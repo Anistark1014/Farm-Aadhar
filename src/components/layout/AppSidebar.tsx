@@ -7,7 +7,8 @@ import {
   Sprout,
   Home,
   Newspaper,
-  Zap
+  Zap,
+  Sliders
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -23,6 +24,8 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SimulationController } from "@/components/dashboard/SimulationController";
 import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +66,14 @@ const menuItems = [
     icon: Settings,
     description: 'Account and system settings'
   },
+  { 
+    title: 'Simulation', 
+    url: '#simulation', 
+    icon: Sliders,
+    description: 'Simulation and data collection settings',
+    isMobileOnly: true,
+    isAction: true
+  },
 ];
 
 export function AppSidebar() {
@@ -73,6 +84,7 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [showSimSettings, setShowSimSettings] = useState(false);
 
   const isActive = (path: string) => {
     if (path === '/') return currentPath === '/';
@@ -160,6 +172,52 @@ export function AppSidebar() {
               {menuItems.map((item, index) => {
                 const isItemActive = isActive(item.url);
                 const isFocused = focusedIndex === index;
+                
+                // Hide mobile-only items on desktop
+                if (item.isMobileOnly) {
+                  return (
+                    <SidebarMenuItem key={item.title} className="md:hidden">
+                      <SidebarMenuButton asChild={!item.isAction}>
+                        {item.isAction ? (
+                          <button
+                            onClick={() => setShowSimSettings(true)}
+                            className={cn(
+                              "flex items-center gap-3 p-3 rounded-xl transition-all duration-200 w-full",
+                              "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                              isFocused && "ring-2 ring-sidebar-ring bg-sidebar-accent/50"
+                            )}
+                            title={collapsed ? item.title : item.description}
+                          >
+                            <item.icon className="h-5 w-5 text-sidebar-foreground" />
+                            {!collapsed && (
+                              <span className="font-medium">{item.title}</span>
+                            )}
+                          </button>
+                        ) : (
+                          <NavLink 
+                            to={item.url} 
+                            className={cn(
+                              "flex items-center gap-3 p-3 rounded-xl transition-all duration-200",
+                              "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                              isItemActive && "bg-sidebar-primary text-sidebar-primary-foreground shadow-md",
+                              isFocused && !isItemActive && "ring-2 ring-sidebar-ring bg-sidebar-accent/50"
+                            )}
+                            title={collapsed ? t(item.title) : item.description}
+                          >
+                            <item.icon className={cn(
+                              "h-5 w-5 transition-colors",
+                              isItemActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground"
+                            )} />
+                            {!collapsed && (
+                              <span className="font-medium">{t(item.title)}</span>
+                            )}
+                          </NavLink>
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                }
+                
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
@@ -191,6 +249,24 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
+      {/* Mobile Simulation Settings Dialog */}
+      <Dialog open={showSimSettings} onOpenChange={setShowSimSettings}>
+        <DialogContent className="max-w-[95vw] md:max-w-2xl max-h-[90vh] overflow-y-auto p-3 md:p-6">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2 text-base md:text-lg">
+              <Sliders className="h-4 w-4 md:h-5 md:w-5" />
+              Simulation Settings
+            </DialogTitle>
+            <DialogDescription className="text-xs md:text-sm">
+              Configure simulation parameters and data collection settings
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-2">
+            <SimulationController />
+          </div>
+        </DialogContent>
+      </Dialog>
     </Sidebar>
   );
 }

@@ -166,56 +166,58 @@ export default function Settings() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded w-48"></div>
-          <div className="h-64 bg-muted rounded"></div>
+          <div className="h-6 md:h-8 bg-muted rounded w-32 md:w-48"></div>
+          <div className="h-48 md:h-64 bg-muted rounded"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 md:p-4 lg:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
       <div className="flex items-center gap-2">
-        <SettingsIcon className="h-6 w-6" />
-        <h1 className="text-2xl font-bold">{t('Settings')}</h1>
+        <SettingsIcon className="h-5 w-5 md:h-6 md:w-6" />
+        <h1 className="text-xl md:text-2xl font-bold">{t('Settings')}</h1>
       </div>
 
       {/* Profile Settings */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <User className="h-4 w-4 md:h-5 md:w-5" />
             {t('Profile Information')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent className="space-y-4 p-3 md:p-6 pt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">{t('Full Name')}</Label>
+              <Label htmlFor="name" className="text-sm">{t('Full Name')}</Label>
               <Input
                 id="name"
                 value={profileData.name}
                 onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                 placeholder={t('Enter your full name')}
+                className="text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">{t('Email')}</Label>
+              <Label htmlFor="email" className="text-sm">{t('Email')}</Label>
               <Input
                 id="email"
                 type="email"
                 value={profileData.email}
                 onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                 placeholder={t('Enter your email')}
+                className="text-sm"
               />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="role">{t('Role')}</Label>
+            <Label htmlFor="role" className="text-sm">{t('Role')}</Label>
             <Select value={profileData.role} onValueChange={(value) => setProfileData({ ...profileData, role: value })}>
-              <SelectTrigger>
+              <SelectTrigger className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -226,7 +228,7 @@ export default function Settings() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleSaveProfile} disabled={updateProfileMutation.isPending}>
+          <Button onClick={handleSaveProfile} disabled={updateProfileMutation.isPending} size="sm" className="text-sm">
             {updateProfileMutation.isPending ? t('Saving...') : t('Save Profile')}
           </Button>
         </CardContent>
@@ -234,38 +236,38 @@ export default function Settings() {
 
       {/* Appearance Settings */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Palette className="h-5 w-5" />
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Palette className="h-4 w-4 md:h-5 md:w-5" />
             {t('Appearance')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-3 md:p-6 pt-0">
           <div className="flex items-center justify-between">
-            <div>
-              <Label>{t('Dark Mode')}</Label>
-              <p className="text-sm text-muted-foreground">
+            <div className="min-w-0 flex-1 mr-2">
+              <Label className="text-sm">{t('Dark Mode')}</Label>
+              <p className="text-xs text-muted-foreground line-clamp-2">
                 {t('Toggle between light and dark themes')}
               </p>
             </div>
-            <Switch checked={theme === 'dark'} onCheckedChange={handleThemeToggle} />
+            <Switch checked={theme === 'dark'} onCheckedChange={handleThemeToggle} className="flex-shrink-0" />
           </div>
         </CardContent>
       </Card>
 
       {/* Language Settings */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Globe className="h-5 w-5" />
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Globe className="h-4 w-4 md:h-5 md:w-5" />
             {t('Language & Region')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-3 md:p-6 pt-0">
           <div className="space-y-2">
-            <Label>{t('Language')}</Label>
+            <Label className="text-sm">{t('Language')}</Label>
             <Select value={language} onValueChange={handleLanguageChange}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full md:w-48 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -279,17 +281,17 @@ export default function Settings() {
 
       {/* Notification Settings */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Bell className="h-4 w-4 md:h-5 md:w-5" />
             {t('Notifications')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-3 md:p-6 pt-0">
           <div className="flex items-center justify-between">
-            <div>
-              <Label>{t('Email Alerts')}</Label>
-              <p className="text-sm text-muted-foreground">
+            <div className="min-w-0 flex-1 mr-2">
+              <Label className="text-sm">{t('Email Alerts')}</Label>
+              <p className="text-xs text-muted-foreground line-clamp-2">
                 {t('Receive alerts via email')}
               </p>
             </div>
@@ -298,12 +300,13 @@ export default function Settings() {
               onCheckedChange={(checked) =>
                 setNotificationSettings({ ...notificationSettings, emailAlerts: checked })
               }
+              className="flex-shrink-0"
             />
           </div>
           <div className="flex items-center justify-between">
-            <div>
-              <Label>{t('Push Notifications')}</Label>
-              <p className="text-sm text-muted-foreground">
+            <div className="min-w-0 flex-1 mr-2">
+              <Label className="text-sm">{t('Push Notifications')}</Label>
+              <p className="text-xs text-muted-foreground line-clamp-2">
                 {t('Receive push notifications in browser')}
               </p>
             </div>
@@ -312,12 +315,13 @@ export default function Settings() {
               onCheckedChange={(checked) =>
                 setNotificationSettings({ ...notificationSettings, pushNotifications: checked })
               }
+              className="flex-shrink-0"
             />
           </div>
           <div className="flex items-center justify-between">
-            <div>
-              <Label>{t('Weekly Reports')}</Label>
-              <p className="text-sm text-muted-foreground">
+            <div className="min-w-0 flex-1 mr-2">
+              <Label className="text-sm">{t('Weekly Reports')}</Label>
+              <p className="text-xs text-muted-foreground line-clamp-2">
                 {t('Receive weekly summary reports')}
               </p>
             </div>
@@ -326,6 +330,7 @@ export default function Settings() {
               onCheckedChange={(checked) =>
                 setNotificationSettings({ ...notificationSettings, weeklyReports: checked })
               }
+              className="flex-shrink-0"
             />
           </div>
         </CardContent>
@@ -333,34 +338,39 @@ export default function Settings() {
 
       {/* Account Actions */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Shield className="h-4 w-4 md:h-5 md:w-5" />
             {t('Account')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-3 md:p-6 pt-0">
           <div className="flex items-center justify-between">
-            <div>
-              <Label>{t('Account Status')}</Label>
-              <p className="text-sm text-muted-foreground">
+            <div className="min-w-0 flex-1 mr-2">
+              <Label className="text-sm">{t('Account Status')}</Label>
+              <p className="text-xs text-muted-foreground line-clamp-2">
                 {t('Your account is active and verified')}
               </p>
             </div>
-            <div className="text-sm text-green-600 font-medium">
+            <div className="text-xs md:text-sm text-green-600 font-medium flex-shrink-0">
               {t('Active')}
             </div>
           </div>
           <Separator />
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-red-600">{t('Sign Out')}</Label>
-              <p className="text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="min-w-0">
+              <Label className="text-red-600 text-sm">{t('Sign Out')}</Label>
+              <p className="text-xs text-muted-foreground line-clamp-2">
                 {t('Sign out of your account')}
               </p>
             </div>
-            <Button variant="outline" onClick={handleSignOut} className="text-red-600 border-red-200 hover:bg-red-50">
-              <LogOut className="h-4 w-4 mr-2" />
+            <Button 
+              variant="outline" 
+              onClick={handleSignOut} 
+              className="text-red-600 border-red-200 hover:bg-red-50 text-sm w-full sm:w-auto flex-shrink-0" 
+              size="sm"
+            >
+              <LogOut className="h-3 w-3 md:h-4 md:w-4 mr-2" />
               {t('Sign Out')}
             </Button>
           </div>

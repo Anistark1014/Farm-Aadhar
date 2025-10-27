@@ -171,7 +171,7 @@ const Index = () => {
             const newReading = payload.new as SensorReading;
             setLatestData(newReading);
             updateChartData(newReading);
-            toast.success('New sensor data received!');
+            // toast.success('New sensor data received!');
           }
         )
         .subscribe();
@@ -278,9 +278,9 @@ const Index = () => {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
       {/* Responsive KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4 lg:gap-6">
         <SensorCard
           title="Air Temp"
           value={((latestData as any)?.air_temperature ?? latestData?.temperature ?? 0).toFixed(1)}
@@ -336,8 +336,8 @@ const Index = () => {
         <TrendAnalysis farmData={chartData.slice(-10)} />
 
       {/* Individual Sensor Graph Tabs */}
-      <div className="my-8">
-        <div className="flex border-b border-border mb-6 overflow-x-auto">
+      <div className="my-4 md:my-8">
+        <div className="flex border-b border-border mb-4 md:mb-6 overflow-x-auto scrollbar-hide">
           {[
             { key: 'temperature', label: 'Temperature', icon: '🌡️' },
             { key: 'humidity', label: 'Humidity', icon: '💧' },
@@ -347,7 +347,7 @@ const Index = () => {
           ].map(tab => (
             <button
               key={tab.key}
-              className={`px-2 md:px-4 py-2 font-medium focus:outline-none transition-colors duration-150 flex items-center gap-1 md:gap-2 whitespace-nowrap text-xs md:text-sm
+              className={`px-3 md:px-4 py-2 font-medium focus:outline-none transition-colors duration-150 flex items-center gap-1 md:gap-2 whitespace-nowrap text-xs md:text-sm flex-shrink-0
                 ${selectedGraph === tab.key
                   ? 'border-b-2 border-primary text-primary bg-card'
                   : 'text-muted-foreground hover:text-primary'}
@@ -359,8 +359,8 @@ const Index = () => {
               }}
               onClick={() => setSelectedGraph(tab.key)}
             >
-              <span className="text-sm md:text-base">{tab.icon}</span>
-              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="text-base md:text-lg">{tab.icon}</span>
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>

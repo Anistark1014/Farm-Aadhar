@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { getStoredThresholds } from '@/components/settings/ThresholdSettings';
+import { thresholdService } from '@/api/threshold-service';
 import { 
   Thermometer, 
   Fan, 
@@ -92,7 +92,11 @@ const AutomationControls: React.FC<AutomationControlsProps> = ({
 
         console.log('AutomationControls: Transformed data', transformedData[0], 'Time:', new Date().toLocaleTimeString());
         setLiveSensorData(transformedData);
-        setLiveThresholds(getStoredThresholds());
+        
+        // Load thresholds from database instead of localStorage
+        const newThresholds = await thresholdService.getCurrentThresholds();
+        console.log('AutomationControls: Loaded thresholds from database', newThresholds);
+        setLiveThresholds(newThresholds);
         console.log('AutomationControls: Live data refreshed', transformedData[0], 'Time:', new Date().toLocaleTimeString());
       }
     } catch (error) {
@@ -110,21 +114,37 @@ const AutomationControls: React.FC<AutomationControlsProps> = ({
     // Set up periodic refresh every 3 seconds
     const refreshInterval = setInterval(fetchLiveData, 3000);
     
-    // Set up WebSocket subscription
-    const subscription = supabase
+    // Set up WebSocket subscription for sensor readings
+    const sensorSubscription = supabase
       .channel('sensor_readings_automation')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'sensor_readings' },
         (payload) => {
-          console.log('AutomationControls: Real-time update received', payload);
+          console.log('AutomationControls: Real-time sensor update received', payload);
           fetchLiveData(); // Refresh data when changes occur
+        }
+      )
+      .subscribe();
+
+    // Set up WebSocket subscription for threshold changes
+    const thresholdSubscription = supabase
+      .channel('current_thresholds_automation_controls')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'current_thresholds' },
+        async (payload) => {
+          console.log('AutomationControls: Real-time threshold update received', payload);
+          // Reload thresholds from database
+          const newThresholds = await thresholdService.getCurrentThresholds();
+          console.log('AutomationControls: Updated thresholds', newThresholds);
+          setLiveThresholds(newThresholds);
         }
       )
       .subscribe();
 
     return () => {
       clearInterval(refreshInterval);
-      subscription.unsubscribe();
+      sensorSubscription.unsubscribe();
+      thresholdSubscription.unsubscribe();
     };
   }, []);
 
@@ -136,7 +156,7 @@ const AutomationControls: React.FC<AutomationControlsProps> = ({
     const newDevices: ControlDevice[] = [];
 
     // Air Conditioner - activated when temperature is high
-    const acTrigger = latestReading.temperature > (currentThresholds.temperature?.max || 30);
+    const acTrigger = latestReading.temperature > (currentThresholds.temperature?.high || 30);
     newDevices.push({
       id: 'ac',
       name: 'Air Conditioner',
@@ -144,25 +164,32 @@ const AutomationControls: React.FC<AutomationControlsProps> = ({
       isActive: acTrigger,
       trigger: acTrigger,
       reason: acTrigger 
-        ? `Temperature ${latestReading.temperature}°C exceeds ${currentThresholds.temperature?.max || 30}°C`
+        ? `Temperature ${latestReading.temperature}°C exceeds ${currentThresholds.temperature?.high || 30}°C`
         : `Temperature ${latestReading.temperature}°C is within range`,
-      targetValue: `Target: ${currentThresholds.temperature?.max || 30}°C`,
+      targetValue: `Target: ${currentThresholds.temperature?.high || 30}°C`,
       type: 'cooling'
     });
 
     // Exhaust Fan - activated when air quality is poor OR humidity is high
+    const airQualityThreshold = currentThresholds.air_quality_mq135?.high || 400;
+    const humidityThreshold = currentThresholds.humidity?.high || 70;
+    
+    console.log('AutomationControls: Fan calculation - AQ:', latestReading.air_quality, 'threshold:', airQualityThreshold, 'Humidity:', latestReading.humidity, 'threshold:', humidityThreshold);
+    
     const fanTrigger = 
-      latestReading.air_quality > (currentThresholds.air_quality?.max || 400) ||
-      latestReading.humidity > (currentThresholds.humidity?.max || 70);
+      latestReading.air_quality > airQualityThreshold ||
+      latestReading.humidity > humidityThreshold;
     
     let fanReason = '';
-    if (latestReading.air_quality > (currentThresholds.air_quality?.max || 400)) {
-      fanReason = `Air quality ${latestReading.air_quality} ppm exceeds ${currentThresholds.air_quality?.max || 400} ppm`;
-    } else if (latestReading.humidity > (currentThresholds.humidity?.max || 70)) {
-      fanReason = `Humidity ${latestReading.humidity}% exceeds ${currentThresholds.humidity?.max || 70}%`;
+    if (latestReading.air_quality > airQualityThreshold) {
+      fanReason = `Air quality ${latestReading.air_quality} ppm exceeds ${airQualityThreshold} ppm`;
+    } else if (latestReading.humidity > humidityThreshold) {
+      fanReason = `Humidity ${latestReading.humidity}% exceeds ${humidityThreshold}%`;
     } else {
       fanReason = `Air quality and humidity within acceptable ranges`;
     }
+    
+    console.log('AutomationControls: Fan trigger:', fanTrigger, 'reason:', fanReason);
 
     newDevices.push({
       id: 'exhaust_fan',
@@ -171,12 +198,12 @@ const AutomationControls: React.FC<AutomationControlsProps> = ({
       isActive: fanTrigger,
       trigger: fanTrigger,
       reason: fanReason,
-      targetValue: `AQ: <${currentThresholds.air_quality?.max || 400}ppm, RH: <${currentThresholds.humidity?.max || 70}%`,
+      targetValue: `AQ: <${airQualityThreshold}ppm, RH: <${humidityThreshold}%`,
       type: 'ventilation'
     });
 
     // Humidifier - activated when humidity is too low
-    const humidifierTrigger = latestReading.humidity < (currentThresholds.humidity?.min || 40);
+    const humidifierTrigger = latestReading.humidity < (currentThresholds.humidity?.low || 40);
     newDevices.push({
       id: 'humidifier',
       name: 'Humidifier',
@@ -184,9 +211,9 @@ const AutomationControls: React.FC<AutomationControlsProps> = ({
       isActive: humidifierTrigger,
       trigger: humidifierTrigger,
       reason: humidifierTrigger 
-        ? `Humidity ${latestReading.humidity}% below ${currentThresholds.humidity?.min || 40}%`
+        ? `Humidity ${latestReading.humidity}% below ${currentThresholds.humidity?.low || 40}%`
         : `Humidity ${latestReading.humidity}% is adequate`,
-      targetValue: `Target: >${currentThresholds.humidity?.min || 40}%`,
+      targetValue: `Target: >${currentThresholds.humidity?.low || 40}%`,
       type: 'humidification'
     });
 

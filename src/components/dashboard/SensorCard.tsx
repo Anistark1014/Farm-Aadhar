@@ -148,7 +148,7 @@ export function SensorCard({
 
   return (
     <TooltipProvider>
-      <Card className={cn("sensor-card-glow hover-scale cursor-pointer border-0 shadow-md", className)}>
+      <Card className={cn("sensor-card-glow hover-scale cursor-pointer shadow-md", className)}>
         <CardContent className="p-3 md:p-6">
           <div className="flex items-center justify-between mb-3 md:mb-4">
             <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 text-primary">

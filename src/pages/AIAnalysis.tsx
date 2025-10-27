@@ -153,49 +153,51 @@ export default function AIAnalysis() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Brain className="h-6 w-6" />
-        <h1 className="text-2xl font-bold">{t('AI Analysis')}</h1>
+    <div className="p-3 md:p-4 lg:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
+      <div className="flex items-center gap-2 mb-4 md:mb-6">
+        <Brain className="h-5 w-5 md:h-6 md:w-6" />
+        <h1 className="text-xl md:text-2xl font-bold truncate">{t('AI Analysis')}</h1>
       </div>
 
       {/* Image Upload and Analysis */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Camera className="h-5 w-5" />
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Camera className="h-4 w-4 md:h-5 md:w-5" />
             {t('Crop Image Analysis')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
+        <CardContent className="space-y-4 p-3 md:p-6 pt-0">
+          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 md:p-8 text-center">
             {imagePreview ? (
-              <div className="space-y-4">
+              <div className="space-y-3 md:space-y-4">
                 <img
                   src={imagePreview}
                   alt="Preview"
-                  className="max-w-sm mx-auto rounded-lg"
+                  className="max-w-full md:max-w-sm mx-auto rounded-lg"
                 />
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => {
                     setImagePreview("");
                     setSelectedImage(null);
                   }}
+                  className="text-xs md:text-sm"
                 >
                   {t('Remove Image')}
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
-                <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
+              <div className="space-y-3 md:space-y-4">
+                <Upload className="h-8 w-8 md:h-12 md:w-12 mx-auto text-muted-foreground" />
                 <div>
-                  <p className="text-lg font-medium">{t('Upload crop image for analysis')}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm md:text-lg font-medium">{t('Upload crop image for analysis')}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     {t('PNG, JPG up to 10MB')}
                   </p>
                 </div>
-                <Button onClick={() => fileInputRef.current?.click()}>
+                <Button onClick={() => fileInputRef.current?.click()} size="sm" className="text-xs md:text-sm">
                   {t('Choose File')}
                 </Button>
                 <input
@@ -214,12 +216,14 @@ export default function AIAnalysis() {
             value={analysisPrompt}
             onChange={(e) => setAnalysisPrompt(e.target.value)}
             rows={3}
+            className="text-sm"
           />
           
           <Button
             onClick={handleAnalyzeImage}
             disabled={isAnalyzing || (!selectedImage && !analysisPrompt)}
-            className="w-full"
+            className="w-full text-xs md:text-sm"
+            size="sm"
           >
             {isAnalyzing ? t('Analyzing...') : t('Analyze with AI')}
           </Button>
@@ -228,19 +232,19 @@ export default function AIAnalysis() {
 
       {/* Voice Analysis */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mic className="h-5 w-5" />
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Mic className="h-4 w-4 md:h-5 md:w-5" />
             {t('Voice Analysis')}
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-center space-y-4">
-            <p className="text-muted-foreground">
+        <CardContent className="p-3 md:p-6 pt-0">
+          <div className="text-center space-y-3 md:space-y-4">
+            <p className="text-xs md:text-sm text-muted-foreground">
               {t('Ask questions about your farm using voice commands')}
             </p>
-            <Button variant="outline" className="w-full">
-              <Mic className="h-4 w-4 mr-2" />
+            <Button variant="outline" className="w-full text-xs md:text-sm" size="sm">
+              <Mic className="h-3 w-3 md:h-4 md:w-4 mr-2" />
               {t('Start Voice Recording')}
             </Button>
           </div>
@@ -249,33 +253,33 @@ export default function AIAnalysis() {
 
       {/* AI Suggestions History */}
       <Card>
-        <CardHeader>
-          <CardTitle>{t('Recent AI Suggestions')}</CardTitle>
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="text-base md:text-lg">{t('Recent AI Suggestions')}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 md:p-6 pt-0">
           {isLoading ? (
-            <p className="text-muted-foreground">{t('Loading suggestions...')}</p>
+            <p className="text-xs md:text-sm text-muted-foreground">{t('Loading suggestions...')}</p>
           ) : suggestions.length === 0 ? (
-            <p className="text-muted-foreground">{t('No suggestions yet. Upload an image to get started!')}</p>
+            <p className="text-xs md:text-sm text-muted-foreground">{t('No suggestions yet. Upload an image to get started!')}</p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {suggestions.map((suggestion) => (
-                <div key={suggestion.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <Badge className={getCategoryColor(suggestion.category)}>
+                <div key={suggestion.id} className="border rounded-lg p-3 md:p-4 space-y-2 md:space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <Badge className={`${getCategoryColor(suggestion.category)} text-xs flex items-center gap-1 flex-shrink-0`}>
                       {getCategoryIcon(suggestion.category)}
-                      <span className="ml-1 capitalize">{suggestion.category.replace('_', ' ')}</span>
+                      <span className="capitalize truncate">{suggestion.category.replace('_', ' ')}</span>
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(suggestion.timestamp).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-sm">{suggestion.suggestion_text}</p>
+                  <p className="text-xs md:text-sm break-words">{suggestion.suggestion_text}</p>
                   {suggestion.image_url && (
                     <img
                       src={suggestion.image_url}
                       alt="Analysis"
-                      className="w-24 h-24 object-cover rounded-md"
+                      className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-md"
                     />
                   )}
                 </div>

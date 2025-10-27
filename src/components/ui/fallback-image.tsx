@@ -46,10 +46,10 @@ export const FallbackImage: React.FC<FallbackImageProps> = ({
           setImageError(true);
           setLoading(false);
         }}
-        // Add referrer policy to try to avoid some 403 issues
+        // Add referrer policy to try to avoid some CORS issues
         referrerPolicy="no-referrer"
-        // Add cross-origin for better compatibility
-        crossOrigin="anonymous"
+        // Remove cross-origin as it can cause additional CORS issues
+        loading="lazy"
       />
     </div>
   );
