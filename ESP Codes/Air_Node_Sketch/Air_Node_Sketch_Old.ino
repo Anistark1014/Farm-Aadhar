@@ -95,7 +95,7 @@ const int WIFI_NETWORK_COUNT = 2;
 // 3. Copy the "anon/public" key (NOT the service_role key for security)
 // 4. Replace the values below
 
-const char* SUPABASE_URL = "https://dlmqiqhwnxbffawfblrz.supabase.co";
+const char* SUPABASE_URL = "https://ghkcfgcyzhtwufizxuyo.supabase.co";
 const char* SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsbXFpcWh3bnhiZmZhd2ZibHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk1MzA4MDUsImV4cCI6MjA1NTEwNjgwNX0.kKMJ2G1DvMHRk_e_jlYw_F_1y-AGYeAixVBRYqOwSl0";  // Replace with your actual anon key
 const char* SUPABASE_ENDPOINT = "/rest/v1/sensor_readings";
 

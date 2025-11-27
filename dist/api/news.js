@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     } = req.query;
 
     // Supabase configuration
-    const SUPABASE_URL = 'https://dlmqiqhwnxbffawfblrz.supabase.co';
+    const SUPABASE_URL = 'https://ghkcfgcyzhtwufizxuyo.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsbXFpcWh3bnhiZmZhd2ZibHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjYzMDYxMTMsImV4cCI6MjA0MTg4MjExM30.WyBL3G9Z5z4RvGhN2D7fN5bIcDW0Ix-z6Xm1i_fhq7w';
 
     // Build query URL
